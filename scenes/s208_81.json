@@ -1,0 +1,21 @@
+{
+  "sceneId": "s208_81",
+  "sceneLabel": "208 Sc81 — Ernie tracker app (Sheriff stationary at NPS)",
+  "charId": "ernie",
+  "theme": "dark",
+  "clockTime": "3:15 PM",
+  "battery": 2,
+  "batteryCharging": false,
+  "signal": 3,
+  "wifi": 0,
+  "airplaneMode": false,
+  "startLocked": false,
+  "notifications": [],
+  "sceneType": "tracker",
+  "appLabel": "Track",
+  "trackerLabel": "Live GPS",
+  "trackerTarget": "Sheriff Vehicle",
+  "trackerStatus": "Stationary — NPS HQ",
+  "mapPinX": 50,
+  "mapPinY": 50
+}

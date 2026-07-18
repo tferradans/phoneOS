@@ -1,0 +1,18 @@
+{
+  "charId": "bill",
+  "charName": "Bill Larsen",
+  "clockFormat": "12h",
+  "accentColor": "#7F8C8D",
+  "uiSkin": "minimal",
+  "formFactor": "tall",
+  "wallpaperHome": null,
+  "wallpaperLock": null,
+  "lockType": "swipe",
+  "lockPin": null,
+  "biometricStyle": null,
+  "carrierName": "AT&T",
+  "contacts": {
+    "francine": { "name": "Francine",    "number": "555-0195", "avatar": null },
+    "jodi":     { "name": "Jodi Larsen", "number": "555-0147", "avatar": null }
+  }
+}

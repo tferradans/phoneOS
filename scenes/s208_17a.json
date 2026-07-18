@@ -1,0 +1,25 @@
+{
+  "sceneId": "s208_17a",
+  "sceneLabel": "208 Sc17A — Ernie checks missed calls/texts + deletes reply",
+  "charId": "ernie",
+  "theme": "dark",
+  "clockTime": "9:44 AM",
+  "battery": 3,
+  "batteryCharging": false,
+  "signal": 2,
+  "wifi": 0,
+  "airplaneMode": false,
+  "startLocked": false,
+  "notifications": ["missCall", "txt"],
+  "sceneType": "text",
+  "sceneContact": "jodi",
+  "priorMessages": [
+    { "from": "them", "text": "Hey, you coming in?",                              "time": "8:12 AM" },
+    { "from": "them", "text": "Ernie, call me back",                              "time": "8:47 AM" },
+    { "from": "them", "text": "starting to get worried. It's not like you to not show up...", "time": "9:28 AM" }
+  ],
+  "deleteDraft": true,
+  "draftMessage": "I'm fine, just needed some air",
+  "sceneMessage": null,
+  "sceneReply": null
+}

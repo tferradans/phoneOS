@@ -1,0 +1,19 @@
+{
+  "sceneId": "s208_38",
+  "sceneLabel": "208 Sc38 — Jodi incoming call from Ernie",
+  "charId": "jodi",
+  "theme": "dark",
+  "clockTime": "12:14 PM",
+  "battery": 3,
+  "batteryCharging": false,
+  "signal": 3,
+  "wifi": 0,
+  "airplaneMode": false,
+  "startLocked": false,
+  "notifications": [],
+  "sceneType": "call",
+  "sceneContact": "ernie",
+  "callDir": "incoming",
+  "callOutcome": null,
+  "callDuration": null
+}

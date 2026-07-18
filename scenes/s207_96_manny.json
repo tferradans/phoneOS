@@ -1,0 +1,19 @@
+{
+  "sceneId": "s207_96_manny",
+  "sceneLabel": "207 Sc96 — Manny outgoing call (pickup)",
+  "charId": "manny",
+  "theme": "dark",
+  "clockTime": "5:44 PM",
+  "battery": 2,
+  "batteryCharging": false,
+  "signal": 2,
+  "wifi": 0,
+  "airplaneMode": false,
+  "startLocked": false,
+  "notifications": [],
+  "sceneType": "call",
+  "sceneContact": null,
+  "callDir": "outgoing",
+  "callOutcome": "answered",
+  "callDuration": null
+}

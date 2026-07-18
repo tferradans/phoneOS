@@ -1,0 +1,17 @@
+{
+  "charId": "aaron_burner",
+  "charName": "Aaron Story (burner)",
+  "clockFormat": "12h",
+  "accentColor": "#555555",
+  "uiSkin": "minimal",
+  "formFactor": "tall",
+  "wallpaperHome": null,
+  "wallpaperLock": null,
+  "lockType": "none",
+  "lockPin": null,
+  "biometricStyle": null,
+  "carrierName": "",
+  "contacts": {
+    "ryan": { "name": "Ryan Miller", "number": "555-0183", "avatar": null }
+  }
+}

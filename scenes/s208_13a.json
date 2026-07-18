@@ -1,0 +1,20 @@
+{
+  "sceneId": "s208_13a",
+  "sceneLabel": "208 Sc13A — Jodi texts Ernie after Ryan call",
+  "charId": "jodi",
+  "theme": "dark",
+  "clockTime": "9:28 AM",
+  "battery": 4,
+  "batteryCharging": false,
+  "signal": 3,
+  "wifi": 0,
+  "airplaneMode": false,
+  "startLocked": false,
+  "notifications": [],
+  "sceneType": "text",
+  "sceneContact": "ernie",
+  "priorMessages": [],
+  "sceneMessage": "starting to get worried. It's not like you to not show up...",
+  "sceneReply": null,
+  "sceneReplyDelay": null
+}

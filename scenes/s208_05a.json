@@ -1,0 +1,19 @@
+{
+  "sceneId": "s208_05a",
+  "sceneLabel": "208 Sc5A — Ryan outgoing call → voicemail (CI)",
+  "charId": "ryan",
+  "theme": "dark",
+  "clockTime": "8:31 AM",
+  "battery": 4,
+  "batteryCharging": false,
+  "signal": 2,
+  "wifi": 0,
+  "airplaneMode": false,
+  "startLocked": false,
+  "notifications": [],
+  "sceneType": "call",
+  "sceneContact": null,
+  "callDir": "outgoing",
+  "callOutcome": "voicemail",
+  "callDuration": null
+}

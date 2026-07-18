@@ -1,0 +1,25 @@
+{
+  "sceneId": "s207_14_txt",
+  "sceneLabel": "207 Sc14 — Meeks texts Lainey (no reply)",
+  "charId": "meeks",
+  "theme": "dark",
+  "clockTime": "9:18 AM",
+  "battery": 3,
+  "batteryCharging": false,
+  "signal": 4,
+  "wifi": 2,
+  "airplaneMode": false,
+  "startLocked": false,
+  "notifications": ["txt"],
+  "sceneType": "text",
+  "sceneContact": "lainey",
+  "priorMessages": [
+    { "from": "me",   "text": "Hey, you good?",                "time": "8:11 AM" },
+    { "from": "me",   "text": "Just checking in",              "time": "8:34 AM" },
+    { "from": "me",   "text": "Call me when you get a chance", "time": "9:01 AM" },
+    { "from": "me",   "text": "Lainey?",                       "time": "9:12 AM" }
+  ],
+  "sceneMessage": "Is everything okay? Haven't heard from you.",
+  "sceneReply": null,
+  "sceneReplyDelay": null
+}

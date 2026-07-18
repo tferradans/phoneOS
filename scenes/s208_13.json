@@ -1,0 +1,19 @@
+{
+  "sceneId": "s208_13",
+  "sceneLabel": "208 Sc13 — Ryan incoming call from Jodi",
+  "charId": "ryan",
+  "theme": "dark",
+  "clockTime": "9:22 AM",
+  "battery": 3,
+  "batteryCharging": false,
+  "signal": 2,
+  "wifi": 0,
+  "airplaneMode": false,
+  "startLocked": false,
+  "notifications": [],
+  "sceneType": "call",
+  "sceneContact": "jodi",
+  "callDir": "incoming",
+  "callOutcome": null,
+  "callDuration": null
+}

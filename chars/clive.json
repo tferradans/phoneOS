@@ -1,0 +1,17 @@
+{
+  "charId": "clive",
+  "charName": "Clive Tucker",
+  "clockFormat": "12h",
+  "accentColor": "#4A90D9",
+  "uiSkin": "minimal",
+  "formFactor": "tall",
+  "wallpaperHome": null,
+  "wallpaperLock": null,
+  "lockType": "swipe",
+  "lockPin": null,
+  "biometricStyle": null,
+  "carrierName": "Verizon",
+  "contacts": {
+    "jodi": { "name": "Jodi Larsen", "number": "555-0147", "avatar": null }
+  }
+}

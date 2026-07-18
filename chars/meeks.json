@@ -1,0 +1,17 @@
+{
+  "charId": "meeks",
+  "charName": "Alex Meeks",
+  "clockFormat": "12h",
+  "accentColor": "#4A90D9",
+  "uiSkin": "minimal",
+  "formFactor": "tall",
+  "wallpaperHome": null,
+  "wallpaperLock": null,
+  "lockType": "swipe",
+  "lockPin": null,
+  "biometricStyle": null,
+  "carrierName": "Verizon",
+  "contacts": {
+    "lainey": { "name": "Lainey Greer", "number": "555-0274", "avatar": null }
+  }
+}

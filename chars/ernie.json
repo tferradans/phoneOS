@@ -1,0 +1,19 @@
+{
+  "charId": "ernie",
+  "charName": "Ernie Estevez",
+  "clockFormat": "12h",
+  "accentColor": "#E67E22",
+  "uiSkin": "minimal",
+  "formFactor": "tall",
+  "wallpaperHome": null,
+  "wallpaperLock": null,
+  "lockType": "swipe",
+  "lockPin": null,
+  "biometricStyle": null,
+  "carrierName": "T-Mobile",
+  "contacts": {
+    "jodi":        { "name": "Jodi Larsen",  "number": "555-0147", "avatar": null },
+    "rattler":     { "name": "Rattler",       "number": "555-0388", "avatar": null },
+    "col_andrews": { "name": "Col. Andrews",  "number": "555-0412", "avatar": null }
+  }
+}

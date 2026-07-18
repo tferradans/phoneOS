@@ -1,0 +1,15 @@
+{
+  "charId": "manny",
+  "charName": "Manny",
+  "clockFormat": "12h",
+  "accentColor": "#C0392B",
+  "uiSkin": "minimal",
+  "formFactor": "tall",
+  "wallpaperHome": null,
+  "wallpaperLock": null,
+  "lockType": "none",
+  "lockPin": null,
+  "biometricStyle": null,
+  "carrierName": "MetroPCS",
+  "contacts": {}
+}

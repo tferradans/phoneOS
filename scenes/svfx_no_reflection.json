@@ -1,0 +1,7 @@
+{
+  "sceneId": "svfx_no_reflection",
+  "sceneLabel": "No Reflection",
+  "charId": "vfx",
+  "sceneType": "vfx_tracker",
+  "vfxVariant": "no_reflection"
+}

@@ -1,0 +1,19 @@
+{
+  "sceneId": "s207_54",
+  "sceneLabel": "207 Sc54 — Ryan incoming call from A.S (Aaron)",
+  "charId": "ryan",
+  "theme": "dark",
+  "clockTime": "2:03 PM",
+  "battery": 3,
+  "batteryCharging": false,
+  "signal": 1,
+  "wifi": 0,
+  "airplaneMode": false,
+  "startLocked": false,
+  "notifications": [],
+  "sceneType": "call",
+  "sceneContact": "a_s",
+  "callDir": "incoming",
+  "callOutcome": null,
+  "callDuration": null
+}

@@ -1,0 +1,21 @@
+{
+  "sceneId": "s207_58",
+  "sceneLabel": "207 Sc58 — Bill types text to Francine, deletes it",
+  "charId": "bill",
+  "theme": "dark",
+  "clockTime": "2:31 PM",
+  "battery": 3,
+  "batteryCharging": false,
+  "signal": 3,
+  "wifi": 2,
+  "airplaneMode": false,
+  "startLocked": false,
+  "notifications": [],
+  "sceneType": "text",
+  "sceneContact": "francine",
+  "priorMessages": [],
+  "deleteDraft": true,
+  "draftMessage": "I still have your sweater. Should I bring it by?",
+  "sceneMessage": null,
+  "sceneReply": null
+}

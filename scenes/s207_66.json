@@ -1,0 +1,20 @@
+{
+  "sceneId": "s207_66",
+  "sceneLabel": "207 Sc66 — Jodi's phone — Clive GPS ping",
+  "charId": "jodi",
+  "theme": "dark",
+  "clockTime": "3:24 PM",
+  "battery": 3,
+  "batteryCharging": false,
+  "signal": 2,
+  "wifi": 0,
+  "airplaneMode": false,
+  "startLocked": false,
+  "notifications": ["gps"],
+  "sceneType": "map",
+  "appLabel": "Find My",
+  "mapTitle": "Clive Tucker",
+  "mapSubtitle": "Bear Claw Junction — Updated just now",
+  "mapPinX": 52,
+  "mapPinY": 45
+}

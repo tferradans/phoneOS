@@ -1,0 +1,20 @@
+{
+  "sceneId": "s208_43",
+  "sceneLabel": "208 Sc43 — Jodi speaker call to Tyson (ping locations)",
+  "charId": "jodi",
+  "theme": "dark",
+  "clockTime": "1:18 PM",
+  "battery": 3,
+  "batteryCharging": false,
+  "signal": 3,
+  "wifi": 0,
+  "airplaneMode": false,
+  "startLocked": false,
+  "notifications": ["email", "missedCall"],
+  "sceneType": "call",
+  "sceneContact": "tyson",
+  "callDir": "outgoing",
+  "callOutcome": "answered",
+  "callDuration": null,
+  "speakerActive": true
+}

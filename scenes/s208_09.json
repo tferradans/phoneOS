@@ -1,0 +1,19 @@
+{
+  "sceneId": "s208_09",
+  "sceneLabel": "208 Sc9 — Nora active call with Jodi (sends location)",
+  "charId": "nora",
+  "theme": "dark",
+  "clockTime": "9:07 AM",
+  "battery": 4,
+  "batteryCharging": false,
+  "signal": 3,
+  "wifi": 0,
+  "airplaneMode": false,
+  "startLocked": false,
+  "notifications": [],
+  "sceneType": "call",
+  "sceneContact": "jodi",
+  "callDir": "outgoing",
+  "callOutcome": "answered",
+  "callDuration": null
+}

@@ -1,0 +1,22 @@
+{
+  "charId": "jodi",
+  "charName": "Jodi Larsen",
+  "clockFormat": "12h",
+  "accentColor": "#4A90D9",
+  "uiSkin": "minimal",
+  "formFactor": "tall",
+  "wallpaperHome": null,
+  "wallpaperLock": null,
+  "lockType": "swipe",
+  "lockPin": null,
+  "biometricStyle": null,
+  "carrierName": "Verizon",
+  "contacts": {
+    "clive":  { "name": "Clive Tucker",   "number": "555-0147", "avatar": null },
+    "ryan":   { "name": "Ryan Miller",    "number": "555-0183", "avatar": null },
+    "tyson":  { "name": "Tyson Bernard",  "number": "555-0209", "avatar": null },
+    "bill":   { "name": "Dad",            "number": "555-0162", "avatar": null },
+    "ernie":  { "name": "Ernie Estevez",  "number": "555-0231", "avatar": null },
+    "nora":   { "name": "Nora Esposito", "number": "555-0318", "avatar": null }
+  }
+}

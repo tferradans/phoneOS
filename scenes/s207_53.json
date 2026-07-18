@@ -1,0 +1,19 @@
+{
+  "sceneId": "s207_53",
+  "sceneLabel": "207 Sc53 — Aaron burner outgoing call to Ryan",
+  "charId": "aaron_burner",
+  "theme": "dark",
+  "clockTime": "2:03 PM",
+  "battery": 2,
+  "batteryCharging": false,
+  "signal": 1,
+  "wifi": 0,
+  "airplaneMode": false,
+  "startLocked": false,
+  "notifications": [],
+  "sceneType": "call",
+  "sceneContact": "Mobile",
+  "callDir": "outgoing",
+  "callOutcome": "answered",
+  "callDuration": null
+}

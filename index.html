@@ -1,0 +1,2933 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="mobile-web-app-capable" content="yes">
+<title>Phone OS</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+
+<style>
+  /* ============================================================
+     RESET + ROOT
+  ============================================================ */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  @font-face { font-family:'SFUI'; src:url('font/sf-ui-display-thin-58646e9b26e8b.otf') format('opentype'); font-weight:100; }
+  @font-face { font-family:'SFUI'; src:url('font/sf-ui-display-ultralight-58646b19bf205.otf') format('opentype'); font-weight:200; }
+  @font-face { font-family:'SFUI'; src:url('font/sf-ui-display-light-58646b33e0551.otf') format('opentype'); font-weight:300; }
+  @font-face { font-family:'SFUI'; src:url('font/sf-ui-display-medium-58646be638f96.otf') format('opentype'); font-weight:500; }
+  @font-face { font-family:'SFUI'; src:url('font/sf-ui-display-semibold-58646eddcae92.otf') format('opentype'); font-weight:600; }
+  @font-face { font-family:'SFUI'; src:url('font/sf-ui-display-bold-58646a511e3d9.otf') format('opentype'); font-weight:700; }
+  @font-face { font-family:'SFUI'; src:url('font/sf-ui-display-heavy-586470160b9e5.otf') format('opentype'); font-weight:800; }
+  @font-face { font-family:'SFUI'; src:url('font/sf-ui-display-black-58646a6b80d5a.otf') format('opentype'); font-weight:900; }
+
+  :root {
+    --bg:            #111;
+    --bg-surface:    #1a1a1a;
+    --bg-overlay:    rgba(0,0,0,0.55);
+    --text:          #fff;
+    --text-secondary:#aaa;
+    --text-dim:      #666;
+    --accent:        #4A90D9;
+    --danger:        #e74c3c;
+    --success:       #2ecc71;
+    --border:        rgba(255,255,255,0.12);
+    --icon-color:    #fff;
+    --status-height: 32px;
+    --radius:        18px;
+    --font-ui:       'SFUI', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  }
+
+  * { -webkit-user-select: none; user-select: none; }
+
+  html, body {
+    width: 100%; height: 100%;
+    overflow: hidden;
+    background: #000;
+    font-family: var(--font-ui);
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    /* Block pull-to-refresh / overscroll glow — a swipe on a scrollable
+       thread must never be able to reload the page mid-take */
+    overscroll-behavior: none;
+  }
+
+  /* ============================================================
+     SCREENS — full viewport layers, z-stacked
+  ============================================================ */
+  .screen {
+    position: fixed;
+    top: var(--status-height);
+    left: 0; right: 0; bottom: 0;
+    display: flex;
+    flex-direction: column;
+    transition: opacity 0.35s ease;
+  }
+  .screen.hidden    { opacity: 0; pointer-events: none; }
+  .screen.invisible { display: none; }
+  #setup-stage1.hidden, #setup-stage2.hidden { display: none; }
+
+  /* ============================================================
+     SETUP SCREEN
+  ============================================================ */
+  #screen-setup {
+    background: #0a0a0f;
+    color: var(--text);
+    padding: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .setup-header {
+    padding: 52px 28px 24px;
+    border-bottom: 1px solid var(--border);
+  }
+  .setup-header h1 {
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 6px;
+  }
+  .setup-header p {
+    font-size: 22px;
+    font-weight: 300;
+    color: var(--text);
+    letter-spacing: -0.02em;
+  }
+
+  .setup-body {
+    padding: 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+  }
+
+  .setup-group label {
+    display: block;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 8px;
+  }
+
+  .setup-group select {
+    width: 100%;
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    color: var(--text);
+    font-size: 16px;
+    font-family: var(--font-ui);
+    padding: 14px 16px;
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23666' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 16px center;
+  }
+  .setup-group select:focus { outline: 2px solid var(--accent); }
+  .setup-group select option { background: #1a1a1a; }
+
+  .setup-group .hint {
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-top: 6px;
+    padding-left: 4px;
+  }
+
+  .setup-s2-title {
+    display: flex; align-items: center;
+    justify-content: space-between;
+    margin-bottom: 6px;
+  }
+  .setup-s2-title h1 { margin-bottom: 0; }
+  .setup-back-btn {
+    background: none; border: none;
+    color: var(--accent); font-size: 24px; line-height: 1;
+    cursor: pointer; padding: 0;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .setup-launch-btn {
+    width: 100%;
+    padding: 18px;
+    border-radius: 14px;
+    border: none;
+    background: var(--accent);
+    color: #fff;
+    font-size: 17px;
+    font-weight: 700;
+    font-family: var(--font-ui);
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    margin-top: 8px;
+    transition: opacity 0.18s, transform 0.1s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .setup-launch-btn:active { opacity: 0.8; transform: scale(0.98); }
+  .setup-launch-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+  .setup-status {
+    font-size: 13px;
+    color: var(--text-dim);
+    text-align: center;
+    min-height: 18px;
+  }
+  .setup-status.error { color: var(--danger); }
+
+  /* loading spinner */
+  .spinner {
+    display: inline-block;
+    width: 14px; height: 14px;
+    border: 2px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    vertical-align: middle;
+    margin-right: 6px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ============================================================
+     PHONE CHROME — wraps lock + home screens
+  ============================================================ */
+  #phone-chrome {
+    position: fixed;
+    inset: 0;
+  }
+
+  /* wallpaper layer — sits behind everything */
+  #wallpaper {
+    position: absolute;
+    inset: 0;
+    background-size: cover;
+    background-position: center;
+    background-color: #111;
+    transition: background-image 0.4s ease;
+  }
+  #wallpaper::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--bg-overlay);
+  }
+
+  /* ============================================================
+     STATUS BAR
+  ============================================================ */
+  #status-bar {
+    position: relative;
+    z-index: 100;
+    background: #000;
+    height: var(--status-height);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px 0 16px;
+    color: var(--icon-color);
+    flex-shrink: 0;
+  }
+
+  .status-left {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .status-time {
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+  }
+
+  /* notification icons in left cluster */
+  .status-notifs {
+    display: flex;
+    gap: 5px;
+    align-items: center;
+  }
+  .status-notifs svg { width: 14px; height: 14px; fill: var(--icon-color); opacity: 0.85; }
+  .status-notifs img { height: var(--sb-arrow-h); width: auto; display: block; filter: invert(1); opacity: 0.85; }
+
+  .status-right {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  .status-right svg { fill: var(--icon-color); }
+
+  /* ---- Status bar icon grid ----
+     Status bar = 18 equal slots × (100%/18) wide.
+     Icons are 14px tall, width auto, vertically centred.   */
+  :root { --sb-icon-h: 10px; --sb-arrow-h: 14px; --sb-arrow-sw: 4; --sb-slot: calc(100% / 18); }
+
+  .status-left img,
+  .status-right img {
+    display: block;
+    height: var(--sb-icon-h);
+    width: auto;
+    filter: invert(1);
+  }
+  /* Low battery: deep red */
+  .battery-low {
+    filter: brightness(0) invert(1) sepia(1) saturate(5) hue-rotate(330deg) brightness(0.55) !important;
+  }
+  /* Each icon slot in the right cluster */
+  .status-right span {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: var(--sb-slot);
+  }
+
+  /* ============================================================
+     LOCK SCREEN
+  ============================================================ */
+  #screen-lock {
+    background: transparent;
+    z-index: 5;
+  }
+
+  .lock-middle {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 0 32px;
+  }
+
+  .lock-avatar {
+    width: 80px; height: 80px;
+    border-radius: 50%;
+    background: var(--bg-surface);
+    border: 2px solid rgba(255,255,255,0.2);
+    object-fit: cover;
+    margin-bottom: 12px;
+  }
+  .lock-avatar-placeholder {
+    width: 80px; height: 80px;
+    border-radius: 50%;
+    background: var(--bg-surface);
+    border: 2px solid rgba(255,255,255,0.2);
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 12px;
+  }
+  .lock-avatar-placeholder svg { width: 40px; height: 40px; fill: var(--text-dim); }
+
+  .lock-name {
+    font-size: 28px;
+    font-weight: 300;
+    color: #fff;
+    letter-spacing: -0.01em;
+  }
+  .lock-date {
+    font-size: 14px;
+    color: rgba(255,255,255,0.6);
+    margin-top: 2px;
+  }
+
+  .lock-bottom {
+    padding: 24px 32px 48px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+  }
+
+  /* PIN pad */
+  .pin-display {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 4px;
+  }
+  .pin-dot {
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    border: 2px solid rgba(255,255,255,0.5);
+    background: transparent;
+    transition: background 0.15s;
+  }
+  .pin-dot.filled { background: #fff; border-color: #fff; }
+
+  .pin-pad {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+    width: 100%;
+    max-width: 300px;
+  }
+  .pin-key {
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.15);
+    border: none;
+    color: #fff;
+    font-size: 22px;
+    font-family: var(--font-ui);
+    font-weight: 300;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.1s, transform 0.1s;
+    -webkit-tap-highlight-color: transparent;
+    max-width: 80px;
+    justify-self: center;
+    width: 72px; height: 72px;
+  }
+  .pin-key:active { background: rgba(255,255,255,0.35); transform: scale(0.93); }
+  .pin-key.empty { background: transparent; pointer-events: none; }
+  .pin-key.del svg { width: 22px; height: 22px; fill: #fff; }
+
+  /* Swipe hint */
+  .swipe-hint {
+    color: rgba(255,255,255,0.55);
+    font-size: 14px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+  .swipe-arrow {
+    animation: swipe-up 1.8s ease-in-out infinite;
+  }
+  @keyframes swipe-up {
+    0%   { opacity: 0.3; transform: translateY(6px); }
+    50%  { opacity: 1;   transform: translateY(-4px); }
+    100% { opacity: 0.3; transform: translateY(6px); }
+  }
+
+  /* Biometric ring */
+  .biometric-ring {
+    width: 64px; height: 64px;
+    position: relative;
+    cursor: pointer;
+  }
+  .biometric-ring svg { width: 100%; height: 100%; }
+  .biometric-ring.scanning .bio-ring-outer {
+    animation: bio-pulse 1.2s ease-in-out infinite;
+  }
+  @keyframes bio-pulse {
+    0%, 100% { opacity: 0.4; r: 28; }
+    50%       { opacity: 1;   r: 30; }
+  }
+
+  /* ============================================================
+     HOME SCREEN
+  ============================================================ */
+  #screen-home {
+    background: transparent;
+    z-index: 4;
+  }
+
+  .home-middle {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(255,255,255,0.3);
+    font-size: 13px;
+    letter-spacing: 0.05em;
+  }
+
+  /* Home bottom bar — reset button hidden here */
+  .home-bottom {
+    padding: 16px 32px 40px;
+    display: flex;
+    justify-content: center;
+  }
+
+  .reset-btn {
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 20px;
+    color: rgba(255,255,255,0.4);
+    font-size: 12px;
+    font-family: var(--font-ui);
+    padding: 8px 18px;
+    cursor: pointer;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* ============================================================
+     CALL SCREEN — incoming + connected
+  ============================================================ */
+  #screen-call {
+    z-index: 8;
+    color: #fff;
+    background: transparent;
+    overflow: hidden;
+  }
+  #screen-call.call-connected {
+    background: #0d0d12;
+  }
+  /* Reduce wallpaper overlay for incoming calls */
+  #phone-chrome.incoming-mode #wallpaper::after {
+    background: rgba(0,0,0,0.28);
+  }
+
+  /* --- Incoming layout --- */
+  .call-inc-wrap {
+    display: flex; flex-direction: column; height: 100%;
+  }
+  .call-inc-info {
+    padding: 32% 28px 0;
+    flex-shrink: 0;
+    text-align: center;
+  }
+  .call-inc-label {
+    font-size: 19px; font-weight: 500;
+    color: rgba(255,255,255,0.85);
+    margin-bottom: 10px;
+    letter-spacing: 0.01em;
+  }
+  .call-inc-name {
+    font-size: 54px; font-weight: 600;
+    color: #fff; letter-spacing: -0.02em; line-height: 1.05;
+  }
+  .call-inc-sub {
+    font-size: 16px; font-weight: 500;
+    color: rgba(255,255,255,0.7); margin-top: 10px;
+  }
+  .call-inc-spacer { flex: 1; }
+  .call-inc-msg-wrap {
+    display: flex; justify-content: center; margin-bottom: 52px;
+  }
+  .call-send-msg-btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: rgba(255,255,255,0.18);
+    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    border: none; border-radius: 24px;
+    color: #fff; font-size: 14px; font-weight: 500;
+    font-family: var(--font-ui);
+    padding: 11px 22px; cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: background 0.15s;
+  }
+  .call-send-msg-btn:active { background: rgba(255,255,255,0.32); }
+  .call-send-msg-btn svg { width: 16px; height: 16px; fill: #fff; }
+  .call-inc-actions {
+    padding: 0 0 52px;
+    display: flex; justify-content: center;
+    align-items: flex-end;
+    gap: 96px;
+  }
+  .call-cir-btn {
+    display: flex; flex-direction: column; align-items: center;
+    gap: 12px; cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    background: none; border: none; color: #fff;
+    font-family: var(--font-ui); padding: 0;
+  }
+  .call-cir-icon {
+    width: 72px; height: 72px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    transition: opacity 0.15s, transform 0.1s;
+  }
+  .call-cir-btn:active .call-cir-icon { opacity: 0.75; transform: scale(0.94); }
+  .call-cir-icon.decline { background: #ee4b38; }
+  .call-cir-icon.accept  { background: #4ddc60; }
+  .call-cir-icon svg { width: 30px; height: 30px; fill: #fff; }
+  .call-cir-label { font-size: 17px; font-weight: 500; color: rgba(255,255,255,0.85); }
+
+  /* --- Connected layout --- */
+  .call-con-wrap {
+    display: flex; flex-direction: column;
+    align-items: center; height: 100%;
+  }
+  .call-con-info {
+    flex: 1; display: flex; flex-direction: column;
+    align-items: center; justify-content: flex-start; gap: 6px;
+    padding: 28% 28px 0;
+  }
+  .call-con-name {
+    font-size: 54px; font-weight: 600;
+    color: #fff; letter-spacing: -0.02em; text-align: center;
+  }
+  .call-con-status {
+    font-size: 19px; font-weight: 500;
+    color: rgba(255,255,255,0.7);
+    min-height: 24px;
+  }
+  .call-con-timer {
+    font-size: 16px; font-weight: 500;
+    color: rgba(255,255,255,0.7);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.04em; min-height: 22px;
+  }
+
+  /* 6-button card */
+  .call-card {
+    width: calc(100% - 40px);
+    background: rgba(255,255,255,0.07);
+    border-radius: 20px;
+    padding: 18px 12px 14px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-bottom: 24px;
+  }
+  .call-card-btn {
+    display: flex; flex-direction: column;
+    align-items: center; gap: 7px;
+    cursor: pointer; background: none; border: none;
+    color: rgba(255,255,255,0.5);
+    font-family: var(--font-ui); padding: 6px 4px;
+    border-radius: 14px;
+    transition: color 0.15s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .call-card-btn.active { color: #fff; }
+  .call-card-icon {
+    width: 58px; height: 58px; border-radius: 50%;
+    background: rgba(255,255,255,0.1);
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.15s;
+  }
+  .call-card-btn.active .call-card-icon { background: rgba(255,255,255,0.22); }
+  .call-card-icon svg { width: 26px; height: 26px; fill: currentColor; }
+  /* Mute active: white circle, red icon */
+  .call-card-btn[data-id="mute"].active .call-card-icon { background: #fff; }
+  .call-card-btn[data-id="mute"].active .call-card-icon svg { fill: #ee4b38; }
+  /* Audio active: green circle, white icon */
+  .call-card-btn[data-id="audio"].active .call-card-icon { background: #4ddc60; }
+  .call-card-btn[data-id="audio"].active .call-card-icon svg { fill: #fff; }
+  .call-card-label { font-size: 13px; font-weight: 500; letter-spacing: 0.01em; }
+
+  /* End button */
+  .call-end-wrap { padding-bottom: 48px; }
+  .call-end-btn {
+    width: 72px; height: 72px; border-radius: 50%;
+    background: #ee4b38; border: none;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; -webkit-tap-highlight-color: transparent;
+    transition: opacity 0.15s, transform 0.1s;
+  }
+  .call-end-btn:active { opacity: 0.82; transform: scale(0.95); }
+  .call-end-btn svg { width: 30px; height: 30px; fill: #fff; }
+
+  /* --- Call Ended layout --- */
+  #screen-call.call-ended { background: #0d0d12; }
+  /* VFX tracker mode — hide status bar for clean plate */
+  .vfx-mode #status-bar { display: none; }
+  .vfx-mode #screen-call { top: 0; }
+  #screen-call canvas { display: block; width: 100%; height: 100%; }
+  .call-ended-wrap {
+    display: flex; flex-direction: column;
+    align-items: center; height: 100%;
+  }
+  .call-ended-top {
+    padding: 18% 28px 0;
+    display: flex; flex-direction: column;
+    align-items: center; gap: 18px; width: 100%;
+  }
+  .call-ended-header {
+    display: flex; align-items: center; gap: 8px;
+  }
+  .call-ended-label {
+    font-size: 19px; font-weight: 500; color: #ee4b38;
+  }
+  .call-ended-name {
+    font-size: 54px; font-weight: 600;
+    color: #fff; letter-spacing: -0.02em; text-align: center;
+  }
+  .call-ended-actions {
+    display: flex; flex-direction: column;
+    align-items: center; gap: 28px; padding-bottom: 52px;
+  }
+  .call-ended-row {
+    display: flex; justify-content: center; gap: 96px;
+  }
+
+  /* ============================================================
+     DIALER SCREEN
+  ============================================================ */
+  #screen-dialer {
+    background: #1c1c1e;
+    z-index: 8;
+    color: #fff;
+  }
+  .dialer-header {
+    flex-shrink: 0;
+    display: flex; justify-content: flex-end; align-items: center;
+    padding: 12px 20px 0;
+    height: 44px;
+  }
+  .dialer-dots {
+    display: flex; flex-direction: column; gap: 4px;
+    padding: 6px; cursor: default; opacity: 0.4;
+  }
+  .dialer-dots span { display: block; width: 4px; height: 4px; border-radius: 50%; background: #fff; }
+  .dialer-display {
+    flex: 1;
+    display: flex; align-items: center; justify-content: center;
+    position: relative;
+    padding: 0 60px;
+    min-height: 80px;
+  }
+  .dialer-display-num {
+    font-size: 48px; font-weight: 300;
+    letter-spacing: 0.04em; color: #fff;
+    text-align: center; min-height: 58px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .dialer-backspace {
+    position: absolute; right: 20px;
+    background: none; border: none; color: #fff;
+    padding: 8px; cursor: pointer;
+    opacity: 0; transition: opacity 0.15s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .dialer-backspace.visible { opacity: 0.7; }
+  .dialer-backspace:active { opacity: 0.4; }
+  .dialer-backspace svg { width: 26px; height: 26px; fill: #fff; display: block; }
+  .dialer-grid {
+    flex-shrink: 0;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(4, 72px);
+    padding: 0 8px;
+  }
+  .dial-key {
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 2px;
+    cursor: pointer; background: none; border: none;
+    color: #fff; font-family: var(--font-ui);
+    -webkit-tap-highlight-color: transparent;
+    -webkit-user-select: none; user-select: none;
+    border-radius: 14px;
+    transition: background 0.1s;
+  }
+  .dial-key:active { background: rgba(255,255,255,0.1); }
+  .dial-key-num { font-size: 46px; font-weight: 300; line-height: 1; }
+  .dial-key-sub {
+    font-size: 11px; font-weight: 600; letter-spacing: 0.14em;
+    color: rgba(255,255,255,0.5); min-height: 14px;
+  }
+  .dial-key.sym .dial-key-num { font-size: 32px; font-weight: 300; }
+  .dialer-actions {
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    padding: 8px 0 12px;
+    height: 80px;
+  }
+  .dialer-call-btn {
+    width: 72px; height: 72px; border-radius: 50%;
+    background: #2ecc71; border: none;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; -webkit-tap-highlight-color: transparent;
+    transition: opacity 0.15s, transform 0.1s;
+  }
+  .dialer-call-btn:active { opacity: 0.85; transform: scale(0.95); }
+  .dialer-call-btn svg { width: 30px; height: 30px; fill: #fff; }
+  .dialer-tabs {
+    flex-shrink: 0;
+    display: flex;
+    border-top: 1px solid rgba(255,255,255,0.08);
+    padding: 10px 0 30px;
+  }
+  .dialer-tab {
+    flex: 1; text-align: center;
+    font-size: 13px; font-weight: 400;
+    color: rgba(255,255,255,0.35); padding: 6px 0;
+    cursor: default; position: relative;
+  }
+  .dialer-tab.active { color: #fff; font-weight: 500; }
+  .dialer-tab.active::after {
+    content: ''; position: absolute; bottom: -1px; left: 20%; right: 20%;
+    height: 2px; background: #fff; border-radius: 1px;
+  }
+  /* Dialer confirm overlay */
+  .dialer-confirm-overlay {
+    position: absolute; inset: 0;
+    background: rgba(0,0,0,0.55); backdrop-filter: blur(6px);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 20;
+  }
+  .dialer-confirm-card {
+    background: #2c2c2e; border-radius: 16px;
+    padding: 22px 28px 16px;
+    text-align: center; width: 260px;
+  }
+  .dialer-confirm-title {
+    font-size: 17px; font-weight: 600; color: #fff;
+    margin-bottom: 6px;
+  }
+  .dialer-confirm-sub {
+    font-size: 13px; color: rgba(255,255,255,0.5);
+    margin-bottom: 20px;
+  }
+  .dialer-confirm-btns {
+    display: flex; gap: 10px;
+  }
+  .dialer-confirm-btn {
+    flex: 1; padding: 10px 0; border: none; border-radius: 10px;
+    font-family: var(--font-ui); font-size: 15px; font-weight: 500;
+    cursor: pointer; -webkit-tap-highlight-color: transparent;
+  }
+  .dialer-confirm-btn.cancel { background: rgba(255,255,255,0.12); color: #fff; }
+  .dialer-confirm-btn.open   { background: #2ecc71; color: #fff; }
+
+  /* ============================================================
+     TEXT SCREEN
+  ============================================================ */
+  #screen-text {
+    background: #fff;
+    z-index: 8;
+    color: #000;
+  }
+
+  /* Header */
+  .text-header {
+    flex-shrink: 0;
+    padding: 10px 8px 10px;
+    border-bottom: 1px solid rgba(0,0,0,0.12);
+    display: flex;
+    align-items: center;
+    background: #f9f9f9;
+  }
+  .text-hdr-back {
+    display: flex; align-items: center; gap: 2px;
+    color: #007AFF; font-size: 17px; font-weight: 400;
+    cursor: default; padding: 4px 6px;
+    white-space: nowrap; flex-shrink: 0;
+  }
+  .text-hdr-back svg { width: 10px; height: 17px; fill: none; stroke: #007AFF; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+  .text-hdr-name {
+    flex: 1; text-align: center;
+    font-size: 20px; font-weight: 600;
+    color: #000; padding: 0 4px;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .text-hdr-actions {
+    display: flex; align-items: center; gap: 0;
+    flex-shrink: 0;
+  }
+  .text-hdr-btn {
+    background: none; border: none; padding: 4px 8px;
+    cursor: default; display: flex; align-items: center; justify-content: center;
+    -webkit-tap-highlight-color: transparent;
+    color: #007AFF;
+  }
+  .text-hdr-btn svg { width: 22px; height: 22px; fill: #007AFF; }
+  .text-hdr-btn.dots svg { width: 4px; }
+
+  /* Thread */
+  .text-thread {
+    flex-shrink: 0;
+    max-height: calc(70vh - var(--status-height) - 52px);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 12px 16px 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .text-spacer { flex: 1; }
+
+  /* Bubbles */
+  .bubble {
+    max-width: 78%;
+    padding: 11px 16px;
+    border-radius: 20px;
+    font-size: 19px;
+    line-height: 1.45;
+    word-break: break-word;
+  }
+  .bubble.them {
+    background: #e5e5ea;
+    color: #000;
+    align-self: flex-start;
+    border-bottom-left-radius: 5px;
+  }
+  .bubble.me {
+    background: #007AFF;
+    color: #fff;
+    align-self: flex-end;
+    border-bottom-right-radius: 5px;
+  }
+  .bubble-time {
+    font-size: 12px;
+    color: #8e8e93;
+    text-align: center;
+    margin: 6px 0 2px;
+    font-weight: 400;
+  }
+  /* Group consecutive bubbles — less radius between same-sender runs */
+  .bubble.them + .bubble.them { border-top-left-radius: 6px; }
+  .bubble.me  + .bubble.me   { border-top-right-radius: 6px; }
+
+  /* Input row */
+  .text-input-row {
+    flex-shrink: 0;
+    padding: 8px 12px 30px;
+    border-top: 1px solid rgba(0,0,0,0.12);
+    background: #f9f9f9;
+    display: flex;
+    gap: 8px;
+    align-items: flex-end;
+  }
+  .text-cam-btn {
+    background: none; border: none;
+    padding: 4px; cursor: default;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .text-cam-btn svg { width: 28px; height: 28px; fill: #8e8e93; }
+  .text-input-wrap {
+    flex: 1;
+    border: 1.5px solid #c8c8cc;
+    border-radius: 22px;
+    background: #fff;
+    display: flex; align-items: flex-end;
+    min-height: 38px; max-height: 120px;
+    overflow: hidden;
+    padding: 0 14px;
+  }
+  .text-input-field {
+    flex: 1;
+    background: transparent;
+    border: none;
+    padding: 9px 0;
+    color: #000;
+    font-size: 17px;
+    font-family: var(--font-ui);
+    font-weight: 300;
+    resize: none;
+    overflow: hidden;
+    line-height: 1.35;
+  }
+  .text-input-field::placeholder { color: #c7c7cc; }
+  .text-input-field:focus { outline: none; }
+  .text-send-btn {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    background: #007AFF;
+    border: none;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+    opacity: 0.35;
+    transition: opacity 0.15s;
+    -webkit-tap-highlight-color: transparent;
+    margin-bottom: 3px;
+  }
+  .text-send-btn.ready { opacity: 1; }
+  .text-send-btn svg { width: 16px; height: 16px; fill: #fff; }
+
+  /* ============================================================
+     LIGHT THEME OVERRIDES
+  ============================================================ */
+  .theme-light {
+    --bg:            #f2f2f7;
+    --bg-surface:    #fff;
+    --bg-overlay:    rgba(0,0,0,0.25);
+    --text:          #000;
+    --text-secondary:#555;
+    --text-dim:      #999;
+    --border:        rgba(0,0,0,0.1);
+    --icon-color:    #000;
+  }
+  /* #screen-text is always light — no theme override needed */
+  .theme-light #screen-call.call-connected { background: #1a1a2e; }
+  .theme-light #screen-setup { background: #f2f2f7; color: #000; }
+  .theme-light .setup-group select { background: #fff; color: #000; border-color: rgba(0,0,0,0.15); }
+
+  /* ============================================================
+     UTILITY
+  ============================================================ */
+  /* Error toast — visible over any screen; tap to dismiss */
+  #err-toast {
+    display: none;
+    position: fixed;
+    bottom: 24px; left: 50%;
+    transform: translateX(-50%);
+    max-width: 86%;
+    background: rgba(160, 30, 30, 0.95);
+    color: #fff;
+    font-size: 13px;
+    line-height: 1.4;
+    padding: 10px 16px;
+    border-radius: 10px;
+    z-index: 9999;
+    cursor: pointer;
+    word-break: break-word;
+  }
+
+  .shake {
+    animation: shake 0.4s ease;
+  }
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    20%       { transform: translateX(-8px); }
+    40%       { transform: translateX(8px); }
+    60%       { transform: translateX(-6px); }
+    80%       { transform: translateX(6px); }
+  }
+
+  /* ============================================================
+     APP SCREEN — map, tracker, drone, wallet, no-service
+  ============================================================ */
+  #screen-app {
+    background: var(--bg);
+    z-index: 8;
+    color: var(--text);
+  }
+  .app-header {
+    display: none;
+  }
+  .app-header-title { font-size: 16px; font-weight: 600; flex: 1; }
+  .app-body { flex: 1; overflow: hidden; position: relative; }
+
+  /* No Service */
+  .noservice-wrap {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 14px; text-align: center; padding: 32px;
+  }
+  .noservice-icon svg { width: 52px; height: 52px; display: block; margin: 0 auto; }
+  .noservice-title { font-size: 20px; font-weight: 300; color: rgba(255,255,255,0.7); }
+  .noservice-sub   { font-size: 13px; color: rgba(255,255,255,0.35); }
+
+  /* Voicemail recording dot */
+  .vm-rec {
+    display: inline-flex; align-items: center; gap: 8px;
+    color: var(--danger); font-size: 15px;
+  }
+  .vm-rec::before {
+    content: ''; width: 9px; height: 9px;
+    background: var(--danger); border-radius: 50%;
+    animation: vm-blink 1s ease-in-out infinite;
+  }
+  @keyframes vm-blink { 0%,100%{opacity:1} 50%{opacity:0.15} }
+
+  /* Map / GPS placeholder */
+  .map-view {
+    width: 100%; height: 100%;
+    background: #0e1a0e;
+    position: relative; overflow: hidden;
+  }
+  .map-grid {
+    position: absolute; inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
+    background-size: 44px 44px;
+  }
+  .map-road { position: absolute; background: rgba(255,255,255,0.1); }
+  .map-road.h { height: 3px; left: 0; right: 0; }
+  .map-road.v { width: 3px; top: 0; bottom: 0; }
+  .map-pin {
+    position: absolute;
+    transform: translate(-50%, -100%);
+  }
+  .map-pin svg { width: 28px; height: 28px; fill: var(--accent); drop-shadow: 0 2px 4px rgba(0,0,0,.5); }
+  .map-label {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    background: linear-gradient(transparent, rgba(0,0,0,0.7));
+    padding: 24px 16px 16px;
+    font-size: 13px; color: rgba(255,255,255,0.8);
+  }
+  .map-label strong { display: block; font-size: 15px; margin-bottom: 2px; color: #fff; }
+
+  /* Tracker */
+  .tracker-view { width: 100%; height: 100%; background: #0a120a; position: relative; overflow: hidden; }
+  .tracker-badge {
+    position: absolute; top: 14px; left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0,0,0,0.75); border: 1px solid var(--accent);
+    color: var(--accent); font-size: 11px; font-weight: 700;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    padding: 4px 14px; border-radius: 20px; white-space: nowrap;
+  }
+  .tracker-dot {
+    position: absolute;
+    transform: translate(-50%, -50%);
+  }
+  .tracker-dot-inner {
+    width: 14px; height: 14px;
+    background: var(--accent); border-radius: 50%;
+    box-shadow: 0 0 0 0 rgba(74,144,217,.7);
+    animation: tpulse 1.8s ease-out infinite;
+  }
+  @keyframes tpulse {
+    0%  { box-shadow: 0 0 0 0 rgba(74,144,217,.7); }
+    70% { box-shadow: 0 0 0 18px rgba(74,144,217,0); }
+    100%{ box-shadow: 0 0 0 0 rgba(74,144,217,0); }
+  }
+  .tracker-status {
+    position: absolute; bottom: 16px; left: 16px; right: 16px;
+    background: rgba(0,0,0,0.7); border-radius: 10px;
+    padding: 10px 14px; font-size: 13px; color: rgba(255,255,255,0.7);
+  }
+  .tracker-status strong { color: #fff; }
+
+  /* Drone feed */
+  .drone-view {
+    width: 100%; height: 100%;
+    background: #060606; position: relative;
+    display: flex; align-items: center; justify-content: center;
+    overflow: hidden;
+  }
+  .drone-scanlines {
+    position: absolute; inset: 0; pointer-events: none;
+    background: repeating-linear-gradient(
+      0deg, transparent, transparent 3px,
+      rgba(255,255,255,0.012) 3px, rgba(255,255,255,0.012) 4px
+    );
+  }
+  .drone-cross {
+    position: absolute; pointer-events: none;
+    width: 56px; height: 56px;
+  }
+  .drone-cross::before, .drone-cross::after {
+    content: ''; position: absolute; background: rgba(0,255,0,0.45);
+  }
+  .drone-cross::before { width: 1px; height: 100%; left: 50%; top: 0; }
+  .drone-cross::after  { width: 100%; height: 1px; top: 50%; left: 0; }
+  .drone-hud {
+    position: absolute; font-size: 10px; color: rgba(0,255,0,0.7);
+    font-family: monospace; letter-spacing: 0.04em; line-height: 1.6;
+  }
+  .drone-hud.tl { top: 12px; left: 12px; }
+  .drone-hud.tr { top: 12px; right: 12px; text-align: right; }
+  .drone-hud.bl { bottom: 12px; left: 12px; }
+  .drone-hud.br { bottom: 12px; right: 12px; text-align: right; }
+  .drone-batt-bar {
+    display: inline-block; width: 36px; height: 5px;
+    background: rgba(0,0,0,0.5); border: 1px solid rgba(0,255,0,0.4);
+    border-radius: 2px; vertical-align: middle; margin-left: 4px; overflow: hidden;
+  }
+  .drone-batt-fill { height: 100%; background: #0f0; border-radius: 1px; }
+
+  /* Wallet */
+  #screen-app.wallet-bg { background: #0a0a14; }
+  .wallet-view { padding: 20px; display: flex; flex-direction: column; gap: 16px; height: 100%; }
+  .wallet-card {
+    background: linear-gradient(135deg, #151a2e 0%, #1e1030 100%);
+    border-radius: 16px; padding: 22px 20px;
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+  .wallet-coin { font-size: 11px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(255,255,255,0.45); margin-bottom: 10px; }
+  .wallet-amount { font-size: 38px; font-weight: 200; letter-spacing: -0.02em; color: #fff; }
+  .wallet-usd { font-size: 13px; color: rgba(255,255,255,0.35); margin-top: 4px; }
+  .wallet-to {
+    background: rgba(255,255,255,0.04); border: 1px solid var(--border);
+    border-radius: 12px; padding: 12px 14px;
+  }
+  .wallet-to-lbl { font-size: 10px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--text-dim); margin-bottom: 5px; }
+  .wallet-to-addr { font-size: 12px; font-family: monospace; color: var(--text-secondary); word-break: break-all; }
+  .wallet-send {
+    width: 100%; padding: 17px; border-radius: 14px; border: none;
+    font-size: 16px; font-weight: 700; font-family: var(--font-ui);
+    cursor: pointer; margin-top: auto;
+    transition: opacity 0.18s, transform 0.1s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .wallet-send:active { opacity: 0.8; transform: scale(0.98); }
+  .wallet-send.ready { background: var(--accent); color: #fff; }
+  .wallet-send.sent  { background: var(--success); color: #fff; }
+  .wallet-confirm { text-align: center; font-size: 13px; color: var(--success); min-height: 18px; }
+</style>
+</head>
+<body>
+
+<!-- ============================================================
+     SETUP SCREEN
+============================================================ -->
+<div id="screen-setup" class="screen">
+
+  <!-- Stage 1: Episode + Character -->
+  <div id="setup-stage1">
+    <div class="setup-header">
+      <h1>Blue Skies S02 - Phone OS</h1>
+      <p>Select episode &amp; character</p>
+    </div>
+    <div class="setup-body">
+      <div class="setup-group">
+        <label>Episode</label>
+        <select id="sel-ep">
+          <option value="">— loading —</option>
+        </select>
+      </div>
+      <div class="setup-group">
+        <label>Character</label>
+        <select id="sel-char">
+          <option value="">— select episode first —</option>
+        </select>
+      </div>
+      <div class="setup-status" id="setup-status"></div>
+      <button class="setup-launch-btn" id="btn-next" disabled>Next</button>
+      <div id="build-stamp" style="margin-top:14px;font-size:11px;opacity:0.45;text-align:center"></div>
+    </div>
+  </div>
+
+  <!-- Stage 2: Scene selection -->
+  <div id="setup-stage2" class="hidden">
+    <div class="setup-header">
+      <div class="setup-s2-title">
+        <h1>Blue Skies S02 - Phone OS</h1>
+        <button class="setup-back-btn" id="btn-back">&#8592;</button>
+      </div>
+      <p id="setup-s2-label"></p>
+    </div>
+    <div class="setup-body">
+      <div class="setup-group">
+        <label>Scene</label>
+        <select id="sel-scene">
+          <option value="">Select scene…</option>
+        </select>
+        <div class="hint" id="scene-hint"></div>
+      </div>
+      <div class="setup-status" id="setup-status2"></div>
+      <button class="setup-launch-btn" id="btn-launch" disabled>Load Scene</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- ============================================================
+     PHONE CHROME (lock + home + overlays share this)
+============================================================ -->
+<div id="phone-chrome" class="screen hidden">
+
+  <!-- Wallpaper -->
+  <div id="wallpaper"></div>
+
+  <!-- Status bar — always on top, shared by all sub-screens -->
+  <div id="status-bar">
+    <div class="status-left">
+      <span class="status-time" id="status-time">9:41</span>
+      <span id="status-location"></span>
+      <div class="status-notifs" id="status-notifs">
+        <!-- notification icons injected here -->
+      </div>
+    </div>
+
+    <div class="status-right">
+      <span id="status-wifi"></span>
+      <span id="status-signal"></span>
+      <span id="status-5g"></span>
+      <span id="status-battery"></span>
+    </div>
+  </div>
+
+  <!-- LOCK SCREEN -->
+  <div id="screen-lock" class="screen">
+    <div class="lock-middle">
+      <div id="lock-avatar-wrap">
+        <div class="lock-avatar-placeholder">
+          <!-- person icon -->
+          <svg viewBox="0 0 24 24"><path d="M12 12c2.7 0 5-2.3 5-5s-2.3-5-5-5-5 2.3-5 5 2.3 5 5 5zm0 2c-3.3 0-10 1.7-10 5v2h20v-2c0-3.3-6.7-5-10-5z"/></svg>
+        </div>
+      </div>
+      <div class="lock-name" id="lock-name">Name</div>
+      <div class="lock-date" id="lock-date"></div>
+    </div>
+
+    <div class="lock-bottom" id="lock-bottom">
+      <!-- content injected based on lockType -->
+    </div>
+  </div>
+
+  <!-- HOME SCREEN -->
+  <div id="screen-home" class="screen hidden">
+    <div class="home-middle">
+      <!-- App icons would go here in future -->
+    </div>
+    <div class="home-bottom">
+      <button class="reset-btn" id="btn-reset">↩ Reset</button>
+    </div>
+  </div>
+
+  <!-- CALL SCREEN -->
+  <div id="screen-call" class="screen hidden">
+    <!-- content injected by buildIncomingCall / buildConnectedCall -->
+  </div>
+
+  <!-- DIALER SCREEN -->
+  <div id="screen-dialer" class="screen hidden">
+    <!-- content injected by buildDialerScreen -->
+  </div>
+
+  <!-- TEXT SCREEN -->
+  <div id="screen-text" class="screen hidden">
+    <div class="text-header">
+      <div class="text-hdr-back">
+        <svg viewBox="0 0 10 17"><polyline points="9,1 1,8.5 9,16"/></svg>
+        Messages
+      </div>
+      <div class="text-hdr-name" id="text-contact-name">Unknown Number</div>
+      <div class="text-hdr-actions">
+        <button class="text-hdr-btn">
+          <svg viewBox="0 0 24 24"><path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1-9.4 0-17-7.6-17-17 0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1L6.6 10.8z"/></svg>
+        </button>
+        <button class="text-hdr-btn">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>
+        </button>
+      </div>
+    </div>
+    <div class="text-thread" id="text-thread"></div>
+    <div class="text-spacer"></div>
+    <div class="text-input-row">
+      <button class="text-cam-btn">
+        <svg viewBox="0 0 24 24"><path d="M12 15.2A3.2 3.2 0 1 0 12 8.8a3.2 3.2 0 0 0 0 6.4zm0 0"/><path d="M9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/></svg>
+      </button>
+      <div class="text-input-wrap">
+        <textarea class="text-input-field" id="text-input" placeholder="SMS message" rows="1"></textarea>
+      </div>
+      <button class="text-send-btn" id="btn-send">
+        <svg viewBox="0 0 24 24"><path d="M4 12l1.41 1.41L11 7.83V20h2V7.83l5.58 5.59L20 12l-8-8-8 8z"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- APP SCREEN — map / tracker / drone / wallet / no-service -->
+  <div id="screen-app" class="screen hidden">
+    <div class="app-header">
+      <div class="app-header-title" id="app-title"></div>
+    </div>
+    <div class="app-body" id="app-body"></div>
+  </div>
+
+</div><!-- /phone-chrome -->
+
+
+<script>
+/* ============================================================
+   STATE
+============================================================ */
+let allChars  = [];
+let allScenes = [];
+let charData  = null;
+let sceneData = null;
+let currentCfg = null;
+let pinBuffer = '';
+let callTimer = null;
+let callSeconds = 0;
+
+/* ── Scene timer registry ─────────────────────────────────────
+   Every timeout/interval created for a scene goes through these
+   helpers so a scene change / reset can never leave a stray timer
+   ticking against a dead screen. */
+let _sceneTimers = [];
+function sceneTimeout(fn, ms) {
+  const id = setTimeout(fn, ms);
+  _sceneTimers.push({ interval: false, id });
+  return id;
+}
+function sceneInterval(fn, ms) {
+  const id = setInterval(fn, ms);
+  _sceneTimers.push({ interval: true, id });
+  return id;
+}
+function clearSceneTimers() {
+  _sceneTimers.forEach(t => t.interval ? clearInterval(t.id) : clearTimeout(t.id));
+  _sceneTimers = [];
+  callTimer = null;
+}
+
+/* Swipe-to-unlock arming — the touch listeners live on #screen-lock
+   permanently (attached once in HIDDEN CONTROLS); buildLockScreen arms
+   them by setting this to the active cfg, unlock/reset disarms. */
+let _swipeUnlockCfg = null;
+
+/* ============================================================
+   SETUP SCREEN
+============================================================ */
+const LS_CHAR = 'phoneOS_char';
+const LS_EP   = 'phoneOS_ep';
+
+const selChar    = document.getElementById('sel-char');
+const selScene   = document.getElementById('sel-scene');
+const sceneHint  = document.getElementById('scene-hint');
+const setupStatus  = document.getElementById('setup-status');
+const setupStatus2 = document.getElementById('setup-status2');
+const btnNext    = document.getElementById('btn-next');
+const btnLaunch  = document.getElementById('btn-launch');
+const btnBack    = document.getElementById('btn-back');
+const selEp      = document.getElementById('sel-ep');
+
+function epFromSceneId(id) {
+  const m = id.match(/^s(\d+)_/);
+  return m ? m[1] : null;
+}
+
+function allEps() {
+  return [...new Set(allScenes.map(s => epFromSceneId(s.id)).filter(Boolean))].sort();
+}
+
+function charsForEp(ep) {
+  const ids = new Set(allScenes.filter(s => epFromSceneId(s.id) === ep).map(s => s.charId).filter(Boolean));
+  // Always include global characters (e.g. VFX) regardless of episode
+  const globals = allChars.filter(c => c.globalEp);
+  globals.forEach(c => ids.add(c.id));
+  return allChars.filter(c => ids.has(c.id));
+}
+
+function scenesForCharEp(charId, ep) {
+  const isGlobal = allChars.some(c => c.id === charId && c.globalEp);
+  return allScenes.filter(s => {
+    const charOk = !s.charId || s.charId === charId;
+    const epOk   = isGlobal || !ep || epFromSceneId(s.id) === ep;
+    return charOk && epOk;
+  });
+}
+
+async function initSetup() {
+  setStatus('Loading…', false);
+  try {
+    const res = await fetch('manifest-index.json');
+    if (!res.ok) throw new Error('manifest-index.json not found');
+    const index = await res.json();
+    allChars  = index.characters || [];
+    allScenes = index.scenes     || [];
+    populateEpSelect();
+    setStatus('', false);
+
+    const savedChar = localStorage.getItem(LS_CHAR);
+    const savedEp   = localStorage.getItem(LS_EP);
+    if (savedChar && savedEp && allChars.some(c => c.id === savedChar)) {
+      showStage2(savedChar, savedEp);
+    }
+  } catch(e) {
+    setStatus('⚠️ ' + e.message + ' — run build-index.py first', true);
+  }
+}
+
+function populateEpSelect() {
+  const eps = allEps();
+  selEp.innerHTML = '<option value="">Select episode…</option>';
+  eps.forEach(ep => {
+    const opt = document.createElement('option');
+    opt.value = ep;
+    opt.textContent = ep;
+    selEp.appendChild(opt);
+  });
+  selChar.innerHTML = '<option value="">— select episode first —</option>';
+  checkStage1Ready();
+}
+
+function populateCharSelectForEp(ep) {
+  const chars = charsForEp(ep);
+  selChar.innerHTML = chars.length
+    ? '<option value="">Select character…</option>'
+    : '<option value="">No characters found</option>';
+  chars.forEach(c => {
+    const opt = document.createElement('option');
+    opt.value = c.id;
+    opt.textContent = c.label;
+    selChar.appendChild(opt);
+    if (chars.length === 1) opt.selected = true;
+  });
+  checkStage1Ready();
+}
+
+function sceneNum(id) {
+  // s207_58 → 207*1000000 + 58*100; s208_33a → 208*1000000 + 33*100 + 1
+  // Word suffixes are ignored for ordering: s207_14_txt sorts as scene 14,
+  // s208_99_manny sorts as scene 99 (ties broken alphabetically by the sort below).
+  const m = id.match(/^s(\d+)_(\d+)([a-z]?)(?:_|$)/);
+  if (!m) return 999999999; // non-episode IDs (vfx, dev) sort last
+  const ep  = parseInt(m[1], 10);
+  const sc  = parseInt(m[2], 10);
+  const sfx = m[3] ? m[3].charCodeAt(0) - 96 : 0;
+  return ep * 1000000 + sc * 100 + sfx;
+}
+
+function populateSceneSelect(charId, ep) {
+  const scenes = scenesForCharEp(charId, ep).slice().sort((a, b) => sceneNum(a.id) - sceneNum(b.id));
+  selScene.innerHTML = '<option value="">Select scene…</option>';
+  scenes.forEach(s => {
+    const opt = document.createElement('option');
+    opt.value = s.id;
+    opt.textContent = s.label.replace(/^\d+\s+/, '');
+    selScene.appendChild(opt);
+  });
+  // Dial Pad always available for every character
+  if (scenes.length) {
+    const sep = document.createElement('option');
+    sep.disabled = true;
+    sep.textContent = '─────────────';
+    selScene.appendChild(sep);
+  }
+  const dialOpt = document.createElement('option');
+  dialOpt.value = '__dialer__';
+  dialOpt.textContent = 'Dial Pad';
+  selScene.appendChild(dialOpt);
+  btnLaunch.disabled = true;
+  sceneHint.textContent = '';
+}
+
+selEp.addEventListener('change', () => {
+  populateCharSelectForEp(selEp.value);
+});
+
+selChar.addEventListener('change', checkStage1Ready);
+selScene.addEventListener('change', () => {
+  btnLaunch.disabled = !selScene.value;
+  // Show the backing JSON filename so the operator can confirm which file loads
+  sceneHint.textContent = (selScene.value && selScene.value !== '__dialer__')
+    ? 'scenes/' + selScene.value + '.json'
+    : '';
+});
+
+function checkStage1Ready() {
+  btnNext.disabled = !(selEp.value && selChar.value);
+}
+
+function setStatus(msg, isError) {
+  setupStatus.textContent = msg;
+  setupStatus.className = 'setup-status' + (isError ? ' error' : '');
+}
+
+function setStatus2(msg, isError) {
+  setupStatus2.textContent = msg;
+  setupStatus2.className = 'setup-status' + (isError ? ' error' : '');
+}
+
+function showStage1() {
+  document.getElementById('setup-stage1').classList.remove('hidden');
+  document.getElementById('setup-stage2').classList.add('hidden');
+}
+
+function showStage2(charId, ep) {
+  const charLabel = (allChars.find(c => c.id === charId) || {}).label || charId;
+  document.getElementById('setup-s2-label').textContent = 'Ep ' + ep + ' · ' + charLabel;
+  populateSceneSelect(charId, ep);
+  document.getElementById('setup-stage1').classList.add('hidden');
+  document.getElementById('setup-stage2').classList.remove('hidden');
+  setStatus2('', false);
+}
+
+btnNext.addEventListener('click', () => {
+  const ep     = selEp.value;
+  const charId = selChar.value;
+  if (!ep || !charId) return;
+  localStorage.setItem(LS_CHAR, charId);
+  localStorage.setItem(LS_EP, ep);
+  showStage2(charId, ep);
+});
+
+btnBack.addEventListener('click', () => {
+  showStage1();
+});
+
+btnLaunch.addEventListener('click', loadScene);
+
+async function loadScene() {
+  const charId  = localStorage.getItem(LS_CHAR);
+  const sceneId = selScene.value;
+  if (!charId || !sceneId) return;
+
+  btnLaunch.disabled = true;
+  setStatus('Loading…', false);
+
+  try {
+    if (sceneId === '__dialer__') {
+      const cRes = await fetch(`chars/${charId}.json`);
+      if (!cRes.ok) throw new Error(`chars/${charId}.json not found`);
+      charData  = await cRes.json();
+      sceneData = { sceneType: 'dialer' };
+      launchPhone(Object.assign({}, charData, sceneData));
+      return;
+    }
+
+    const [cRes, sRes] = await Promise.all([
+      fetch(`chars/${charId}.json`),
+      fetch(`scenes/${sceneId}.json`)
+    ]);
+    if (!cRes.ok) throw new Error(`chars/${charId}.json not found`);
+    if (!sRes.ok) throw new Error(`scenes/${sceneId}.json not found`);
+
+    charData  = await cRes.json();
+    sceneData = await sRes.json();
+
+    // Merge: scene values override char values
+    const cfg = Object.assign({}, charData, sceneData);
+
+    launchPhone(cfg);
+
+  } catch(e) {
+    setStatus('⚠️ ' + e.message, true);
+    btnLaunch.disabled = false;
+  }
+}
+
+/* ============================================================
+   PHONE LAUNCH
+============================================================ */
+function launchPhone(cfg) {
+  currentCfg = cfg;
+  acquireWakeLock();
+  applyTheme(cfg.theme);
+  applyWallpaper(cfg);
+  applyStatusBar(cfg);
+
+  // Show phone chrome
+  document.getElementById('screen-setup').classList.add('hidden');
+  document.getElementById('phone-chrome').classList.remove('hidden');
+
+  if (cfg.startLocked) {
+    buildLockScreen(cfg);
+    showScreen('screen-lock');
+  } else {
+    launchScene(cfg);
+  }
+}
+
+/* ============================================================
+   THEME
+============================================================ */
+function applyTheme(theme) {
+  document.body.classList.remove('theme-light', 'theme-dark');
+  if (theme === 'light') document.body.classList.add('theme-light');
+}
+
+/* ============================================================
+   WALLPAPER
+============================================================ */
+function applyWallpaper(cfg) {
+  const src = cfg.wallpaperLock || cfg.wallpaperHome || null;
+  setWallpaper(src, cfg);
+}
+
+function setWallpaper(src, cfg) {
+  const el = document.getElementById('wallpaper');
+  // Always set these explicitly — never use background shorthand (it resets background-size)
+  if (src) {
+    el.style.backgroundImage = `url('img/${src}')`;
+    el.style.backgroundSize = 'cover';
+    el.style.backgroundPosition = 'center';
+    el.style.backgroundColor = '#0d0d12'; // fallback if image missing
+  } else {
+    el.style.backgroundImage = cfg.accentColor
+      ? `linear-gradient(160deg, ${cfg.accentColor}44, #111)`
+      : 'none';
+    el.style.backgroundSize = '';
+    el.style.backgroundPosition = '';
+    el.style.backgroundColor = cfg.accentColor ? '' : '#111';
+  }
+}
+
+/* ============================================================
+   STATUS BAR
+============================================================ */
+function applyStatusBar(cfg) {
+  // Clock — hidden by default, shown only if showClock is true
+  const clockEl = document.getElementById('status-time');
+  if (cfg.showClock) {
+    clockEl.textContent = formatClock(cfg.clockTime, cfg.clockFormat);
+    clockEl.style.display = '';
+  } else {
+    clockEl.style.display = 'none';
+  }
+
+  // Location arrow — filled inline SVG so weight is controllable without editing the asset
+  document.getElementById('status-location').innerHTML = `<svg viewBox="0 0 46.21 49.27" style="height:var(--sb-arrow-h);width:auto;display:block;" fill="none" stroke="white" stroke-linejoin="round"><polygon points="1.51 18.99 44.7 1.51 26.7 47.27 23.11 24.39 1.51 18.99" style="stroke-width:var(--sb-arrow-sw)"/></svg>`;
+
+  if (cfg.airplaneMode) {
+    document.getElementById('status-wifi').innerHTML   = '';
+    document.getElementById('status-signal').innerHTML = svgAirplane();
+    document.getElementById('status-5g').innerHTML     = '';
+  } else {
+    // Wifi — only show if wifi > 0
+    const wifiLevel = cfg.wifi || 0;
+    document.getElementById('status-wifi').innerHTML = wifiLevel > 0
+      ? statusIcon(`img/icons/wifi-${Math.min(wifiLevel, 3)}.svg`)
+      : '';
+
+    // Signal bars
+    const sigLevel = Math.max(0, Math.min(cfg.signal ?? 0, 4));
+    document.getElementById('status-signal').innerHTML = statusIcon(`img/icons/signal-${sigLevel}.svg`);
+
+    // 5G indicator — hide when no signal
+    document.getElementById('status-5g').innerHTML = sigLevel > 0 ? statusIcon('img/icons/5g.svg') : '';
+  }
+
+  // Battery — red for levels 0 and 1
+  const batLevel = Math.max(0, Math.min(cfg.battery ?? 3, 5));
+  const batCls = batLevel <= 1 ? 'battery-low' : '';
+  document.getElementById('status-battery').innerHTML = statusIcon(`img/icons/battery-${batLevel}.svg`, 18, batCls);
+
+  // Notifications
+  const notifEl = document.getElementById('status-notifs');
+  notifEl.innerHTML = '';
+  (cfg.notifications || []).forEach(key => {
+    const icon = notifIcon(key);
+    if (icon) {
+      const span = document.createElement('span');
+      span.innerHTML = icon;
+      notifEl.appendChild(span);
+    }
+  });
+}
+
+function formatClock(time, format) {
+  if (!time) return '12:00';
+  const m = String(time).trim().match(/^(\d{1,2}):(\d{2})\s*(AM|PM)?$/i);
+  if (!m) return time; // unparseable — show as written in the JSON
+  let h = parseInt(m[1], 10);
+  const min = m[2];
+  const ap  = m[3] ? m[3].toUpperCase() : null;
+  if (format === '24h') {
+    if (ap === 'PM' && h < 12) h += 12;
+    if (ap === 'AM' && h === 12) h = 0;
+    return `${String(h).padStart(2, '0')}:${min}`;
+  }
+  // 12h — convert from 24h input if needed, otherwise keep as written
+  if (ap) return `${h}:${min} ${ap}`;
+  const ampm = h >= 12 ? 'PM' : 'AM';
+  h = h % 12 || 12;
+  return `${h}:${min} ${ampm}`;
+}
+
+/* ============================================================
+   LOCK SCREEN
+============================================================ */
+function buildLockScreen(cfg) {
+  // Date
+  const now = new Date();
+  document.getElementById('lock-date').textContent = now.toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric' });
+
+  // Name
+  document.getElementById('lock-name').textContent = cfg.charName || cfg.charId || '';
+
+  // Avatar — show the placeholder immediately, swap in the photo only if it loads.
+  // (Never inject markup through an onerror attribute: the SVG's quotes break it.)
+  const avatarWrap = document.getElementById('lock-avatar-wrap');
+  avatarWrap.innerHTML = placeholderPersonSVG('lock-avatar-placeholder');
+  if (cfg.charId) {
+    const img = new Image();
+    img.className = 'lock-avatar';
+    img.onload  = () => { avatarWrap.innerHTML = ''; avatarWrap.appendChild(img); };
+    img.src = `img/${cfg.charId}_avatar.jpg`;
+  }
+
+  const lockBottom = document.getElementById('lock-bottom');
+  lockBottom.innerHTML = '';
+
+  const lockType = cfg.lockType || 'swipe';
+  _swipeUnlockCfg = null; // disarm swipe unless this lock type arms it
+
+  if (lockType === 'none') {
+    // Auto-unlock after brief delay
+    sceneTimeout(() => unlockPhone(cfg), 600);
+
+  } else if (lockType === 'swipe') {
+    lockBottom.innerHTML = `
+      <div class="swipe-hint">
+        <div class="swipe-arrow">↑</div>
+        <div>Swipe up to unlock</div>
+      </div>`;
+    // Swipe listeners are attached ONCE (see HIDDEN CONTROLS section);
+    // arming the cfg here is all that's needed. Re-attaching per scene
+    // load stacked duplicate listeners and fired unlock multiple times.
+    _swipeUnlockCfg = cfg;
+
+  } else if (lockType === 'pin') {
+    pinBuffer = '';
+    lockBottom.innerHTML = buildPinPad();
+    document.querySelectorAll('.pin-key').forEach(key => {
+      key.addEventListener('click', () => handlePinKey(key.dataset.val, cfg));
+    });
+
+  } else if (lockType === 'biometric') {
+    const style = cfg.biometricStyle || 'fingerprint';
+    lockBottom.innerHTML = `
+      <div class="biometric-ring" id="bio-ring" title="Touch to authenticate">
+        ${style === 'fingerprint' ? svgFingerprint() : svgFaceId()}
+      </div>
+      <div style="color:rgba(255,255,255,0.45);font-size:13px;margin-top:8px">
+        ${style === 'fingerprint' ? 'Touch fingerprint sensor' : 'Face ID'}
+      </div>`;
+    document.getElementById('bio-ring').addEventListener('click', () => {
+      document.getElementById('bio-ring').classList.add('scanning');
+      sceneTimeout(() => unlockPhone(cfg), 800);
+    });
+  }
+}
+
+function buildPinPad() {
+  const keys = ['1','2','3','4','5','6','7','8','9','','0','del'];
+  return `
+    <div class="pin-display">
+      ${[0,1,2,3].map(i => `<div class="pin-dot" id="pd-${i}"></div>`).join('')}
+    </div>
+    <div class="pin-pad">
+      ${keys.map(k => {
+        if (k === '') return `<button class="pin-key empty"></button>`;
+        if (k === 'del') return `<button class="pin-key del" data-val="del">
+          <svg viewBox="0 0 24 24"><path d="M22 3H7c-.69 0-1.23.35-1.59.88L0 12l5.41 8.11c.36.53.9.89 1.59.89h15c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-3 12.59L17.59 17 14 13.41 10.41 17 9 15.59 12.59 12 9 8.41 10.41 7 14 10.59 17.59 7 19 8.41 15.41 12 19 15.59z"/></svg>
+        </button>`;
+        return `<button class="pin-key" data-val="${k}">${k}</button>`;
+      }).join('')}
+    </div>`;
+}
+
+function handlePinKey(val, cfg) {
+  if (val === 'del') {
+    pinBuffer = pinBuffer.slice(0, -1);
+  } else {
+    if (pinBuffer.length >= 4) return;
+    pinBuffer += val;
+  }
+  // Update dots
+  for (let i = 0; i < 4; i++) {
+    const dot = document.getElementById(`pd-${i}`);
+    if (dot) dot.classList.toggle('filled', i < pinBuffer.length);
+  }
+  // Check PIN
+  if (pinBuffer.length === 4) {
+    const correctPin = cfg.lockPin ? String(cfg.lockPin) : '0000';
+    if (pinBuffer === correctPin || cfg.lockPin === null) {
+      unlockPhone(cfg);
+    } else {
+      // Wrong pin — shake and clear
+      const lockBottom = document.getElementById('lock-bottom');
+      lockBottom.classList.add('shake');
+      sceneTimeout(() => {
+        lockBottom.classList.remove('shake');
+        pinBuffer = '';
+        for (let i = 0; i < 4; i++) {
+          const dot = document.getElementById(`pd-${i}`);
+          if (dot) dot.classList.remove('filled');
+        }
+      }, 450);
+    }
+  }
+}
+
+function unlockPhone(cfg) {
+  _swipeUnlockCfg = null;
+  // Switch wallpaper to home
+  setWallpaper(cfg.wallpaperHome || cfg.wallpaperLock, cfg);
+  hideScreen('screen-lock');
+  launchScene(cfg);
+}
+
+/* ============================================================
+   SCENE LAUNCH
+============================================================ */
+function launchScene(cfg) {
+  const type = cfg.sceneType || 'idle';
+  document.getElementById('phone-chrome').classList.toggle('vfx-mode', type === 'vfx_tracker');
+
+  if (type === 'idle') {
+    showScreen('screen-home');
+
+  } else if (type === 'vfx_tracker') {
+    buildVfxTrackerScreen(cfg);
+    showScreen('screen-call');
+
+  } else if (type === 'call') {
+    buildCallScreen(cfg);
+    showScreen('screen-call');
+
+  } else if (type === 'text') {
+    buildTextScreen(cfg);
+    showScreen('screen-text');
+
+  } else if (type === 'noservice') {
+    buildNoServiceScreen(cfg);
+    showScreen('screen-app');
+
+  } else if (type === 'map') {
+    buildMapScreen(cfg);
+    showScreen('screen-app');
+
+  } else if (type === 'tracker') {
+    buildTrackerScreen(cfg);
+    showScreen('screen-app');
+
+  } else if (type === 'drone') {
+    buildDroneScreen(cfg);
+    showScreen('screen-app');
+
+  } else if (type === 'wallet') {
+    buildWalletScreen(cfg);
+    showScreen('screen-app');
+
+  } else if (type === 'dialer') {
+    buildDialerScreen(cfg);
+    showScreen('screen-dialer');
+
+  } else {
+    showScreen('screen-home');
+  }
+}
+
+/* ============================================================
+   APP SCREEN BUILDERS
+============================================================ */
+function buildNoServiceScreen(cfg) {
+  document.getElementById('screen-app').classList.remove('wallet-bg');
+  document.getElementById('app-title').textContent = cfg.appLabel || '';
+  document.getElementById('app-body').innerHTML = `
+    <div class="noservice-wrap">
+      <div class="noservice-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="1"    y="15" width="4" height="8"  rx="0.5"/>
+          <rect x="6.5"  y="10" width="4" height="13" rx="0.5"/>
+          <rect x="12"   y="5"  width="4" height="18" rx="0.5"/>
+          <rect x="17.5" y="1"  width="4" height="22" rx="0.5"/>
+          <line x1="2" y1="2" x2="22" y2="22"/>
+        </svg>
+      </div>
+      <div class="noservice-title">${cfg.noServiceLabel || 'No Service'}</div>
+      <div class="noservice-sub">${cfg.noServiceSub || 'Searching for signal…'}</div>
+    </div>`;
+
+}
+
+function buildMapScreen(cfg) {
+  document.getElementById('screen-app').classList.remove('wallet-bg');
+  document.getElementById('app-title').textContent = cfg.appLabel || 'Maps';
+  const px = cfg.mapPinX || 50;
+  const py = cfg.mapPinY || 42;
+  document.getElementById('app-body').innerHTML = `
+    <div class="map-view">
+      <div class="map-grid"></div>
+      <div class="map-road h" style="top:35%"></div>
+      <div class="map-road h" style="top:62%"></div>
+      <div class="map-road v" style="left:28%"></div>
+      <div class="map-road v" style="left:70%"></div>
+      <div class="map-pin" style="left:${px}%;top:${py}%">
+        <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+      </div>
+      <div class="map-label">
+        <strong>${cfg.mapTitle || 'Location'}</strong>
+        ${cfg.mapSubtitle || ''}
+      </div>
+    </div>`;
+
+}
+
+function buildTrackerScreen(cfg) {
+  document.getElementById('screen-app').classList.remove('wallet-bg');
+  document.getElementById('app-title').textContent = cfg.appLabel || 'Find My';
+  const px = cfg.mapPinX || 55;
+  const py = cfg.mapPinY || 48;
+  document.getElementById('app-body').innerHTML = `
+    <div class="tracker-view">
+      <div class="map-grid"></div>
+      <div class="map-road h" style="top:40%"></div>
+      <div class="map-road h" style="top:68%"></div>
+      <div class="map-road v" style="left:32%"></div>
+      <div class="map-road v" style="left:65%"></div>
+      <div class="tracker-badge">${cfg.trackerLabel || 'Live Location'}</div>
+      <div class="tracker-dot" style="left:${px}%;top:${py}%">
+        <div class="tracker-dot-inner"></div>
+      </div>
+      <div class="tracker-status">
+        <strong>${cfg.trackerTarget || 'Target'}</strong>
+        &nbsp;&mdash;&nbsp;${cfg.trackerStatus || 'Stationary'}
+      </div>
+    </div>`;
+
+}
+
+function buildDroneScreen(cfg) {
+  document.getElementById('screen-app').classList.remove('wallet-bg');
+  const name    = cfg.droneName    || 'BETTY';
+  const batt    = cfg.droneBattery != null ? cfg.droneBattery : 72;
+  const battW   = Math.round(batt * 0.36);
+  const battCol = batt < 20 ? '#f00' : batt < 40 ? '#ff0' : '#0f0';
+  const alt     = cfg.droneAlt    || '82m';
+  const speed   = cfg.droneSpeed  || '0 km/h';
+  const coords  = cfg.droneCoords || '50.1234° N  119.8765° W';
+  document.getElementById('app-title').textContent = cfg.appLabel || '';
+  document.getElementById('app-body').innerHTML = `
+    <div class="drone-view">
+      <div class="drone-scanlines"></div>
+      <div class="drone-cross"></div>
+      <div class="drone-hud tl">${name}<br>LIVE FEED</div>
+      <div class="drone-hud tr">
+        BATT&nbsp;<span class="drone-batt-bar"><span class="drone-batt-fill" style="width:${battW}px;background:${battCol}"></span></span>&nbsp;${batt}%
+      </div>
+      <div class="drone-hud bl">${coords}</div>
+      <div class="drone-hud br">ALT ${alt}<br>SPD ${speed}</div>
+    </div>`;
+
+}
+
+function buildWalletScreen(cfg) {
+  document.getElementById('screen-app').classList.add('wallet-bg');
+  const coin   = cfg.coinName   || 'COIN';
+  const amount = cfg.transferAmount || '0';
+  const usd    = cfg.transferUSD   || '';
+  const addr   = cfg.recipientAddress || '0x000...000';
+  document.getElementById('app-title').textContent = cfg.appLabel || 'Wallet';
+  document.getElementById('app-body').innerHTML = `
+    <div class="wallet-view">
+      <div class="wallet-card">
+        <div class="wallet-coin">${coin}</div>
+        <div class="wallet-amount">${amount}</div>
+        ${usd ? `<div class="wallet-usd">${usd}</div>` : ''}
+      </div>
+      <div class="wallet-to">
+        <div class="wallet-to-lbl">Send to</div>
+        <div class="wallet-to-addr">${addr}</div>
+      </div>
+      <div class="wallet-confirm" id="wallet-confirm"></div>
+      <button class="wallet-send ready" id="wallet-send-btn">Send ${amount} ${coin}</button>
+    </div>`;
+
+  document.getElementById('wallet-send-btn').addEventListener('click', function() {
+    this.textContent = 'Sent ✔';
+    this.classList.remove('ready');
+    this.classList.add('sent');
+    this.disabled = true;
+    document.getElementById('wallet-confirm').textContent = 'Transaction confirmed';
+  });
+
+}
+
+/* App screens have NO visible controls — anything on these screens can be
+   on camera. Use the hidden gestures instead: long-press top-left corner
+   for the scene menu, double-tap the top strip to restart the scene. */
+
+/* ============================================================
+   VFX TRACKER SCREEN
+   Dot positions are ratios of the 1440×2960 reference image.
+   Dot radius is stored as a fraction of reference width (1440px)
+   so it scales correctly on any device.
+============================================================ */
+const VFX_TRACKERS = {
+  first_choice:  { bg:'#000000', dot:'#FF6D0A', lx:0.091, rx:0.899, ty:0.038, by:0.962, rw:0.00903 },
+  high_contrast: { bg:'#5C5C5C', dot:'#00B771', lx:0.091, rx:0.910, ty:0.050, by:0.956, rw:0.00278 },
+  intense_green: { bg:'#006600', dot:'#FF630A', lx:0.094, rx:0.909, ty:0.036, by:0.962, rw:0.00347 },
+  intense_grey:  { bg:'#5C5C5C', dot:'#FF6B00', lx:0.102, rx:0.912, ty:0.037, by:0.960, rw:0.00278 },
+  no_reflection: { bg:'#006600', dot:'#07B271', lx:0.092, rx:0.908, ty:0.047, by:0.960, rw:0.00278 },
+};
+
+let _vfxRO = null; // ResizeObserver for the active VFX canvas
+
+function buildVfxTrackerScreen(cfg) {
+  const t = VFX_TRACKERS[cfg.vfxVariant] || VFX_TRACKERS.first_choice;
+  const el = document.getElementById('screen-call');
+
+  if (_vfxRO) { _vfxRO.disconnect(); _vfxRO = null; }
+
+  el.innerHTML = '<canvas id="vfx-canvas"></canvas>';
+  const cv = document.getElementById('vfx-canvas');
+  cv.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;display:block';
+
+  function draw() {
+    const W = el.offsetWidth;
+    const H = el.offsetHeight;
+    if (!W || !H) return;
+    cv.width  = W * (window.devicePixelRatio || 1);
+    cv.height = H * (window.devicePixelRatio || 1);
+    cv.style.width  = W + 'px';
+    cv.style.height = H + 'px';
+    const ctx = cv.getContext('2d');
+    ctx.scale(window.devicePixelRatio || 1, window.devicePixelRatio || 1);
+
+    ctx.fillStyle = t.bg;
+    ctx.fillRect(0, 0, W, H);
+
+    // Dot radius scales with width; minimum 2px so it stays visible in the simulator
+    const r = Math.max(t.rw * W, 2);
+    ctx.fillStyle = t.dot;
+    [[t.lx * W, t.ty * H], [t.rx * W, t.ty * H],
+     [t.lx * W, t.by * H], [t.rx * W, t.by * H]].forEach(([x, y]) => {
+      ctx.beginPath();
+      ctx.arc(x, y, r, 0, Math.PI * 2);
+      ctx.fill();
+    });
+  }
+
+  draw();
+  _vfxRO = new ResizeObserver(draw);
+  _vfxRO.observe(el);
+}
+
+/* ============================================================
+   CALL SCREEN
+============================================================ */
+function resolveCallName(cfg) {
+  const contact = cfg.contacts && cfg.sceneContact
+    ? cfg.contacts[cfg.sceneContact]
+    : null;
+  if (!contact) return cfg.sceneContact || 'Unknown';
+  // "Dad" (or any contact.name with no spaces) is already a display alias — keep it as-is
+  // For regular names: use first name only, unless cfg.showFullName is true
+  if (cfg.showFullName) return contact.name;
+  // Single-word names (aliases like "Dad", "Rattler") stay as-is
+  const parts = contact.name.trim().split(/\s+/);
+  return parts.length === 1 ? contact.name : parts[0];
+}
+
+function buildCallScreen(cfg) {
+  const contact = cfg.contacts && cfg.sceneContact
+    ? cfg.contacts[cfg.sceneContact]
+    : null;
+  const name = resolveCallName(cfg);
+  const sub  = contact ? contact.number : '';
+  const el   = document.getElementById('screen-call');
+  const dir  = cfg.callDir || 'outgoing';
+  const outcome = cfg.callOutcome || 'answered';
+
+  if (dir === 'incoming') {
+    buildIncomingCall(el, cfg, name, sub);
+  } else if (outcome === 'voicemail') {
+    buildConnectedCall(el, cfg, name, true, 'voicemail');
+  } else if (outcome === 'noanswer') {
+    buildConnectedCall(el, cfg, name, true, 'noanswer');
+  } else {
+    buildConnectedCall(el, cfg, name, true, 'answered');
+  }
+}
+
+function buildIncomingCall(el, cfg, name, sub) {
+  el.classList.remove('call-connected');
+  const phoneChr = document.getElementById('phone-chrome');
+  phoneChr.classList.add('incoming-mode');
+
+  // Swap wallpaper to character's call background
+  const wpEl = document.getElementById('wallpaper');
+  const prevBgImage = wpEl.style.backgroundImage;
+  const prevBgSize  = wpEl.style.backgroundSize;
+  const prevBgPos   = wpEl.style.backgroundPosition;
+  const prevBgColor = wpEl.style.backgroundColor;
+  wpEl.style.backgroundImage    = `url('img/bg/${cfg.charId}.png')`;
+  wpEl.style.backgroundSize     = 'cover';
+  wpEl.style.backgroundPosition = 'center';
+  wpEl.style.backgroundColor    = '#111';
+
+  function restoreWallpaper() {
+    phoneChr.classList.remove('incoming-mode');
+    wpEl.style.backgroundImage    = prevBgImage;
+    wpEl.style.backgroundSize     = prevBgSize;
+    wpEl.style.backgroundPosition = prevBgPos;
+    wpEl.style.backgroundColor    = prevBgColor;
+  }
+
+  el.innerHTML = `
+    <div class="call-inc-wrap">
+      <div class="call-inc-info">
+        <div class="call-inc-label">Incoming Call</div>
+        <div class="call-inc-name">${name}</div>
+        <div class="call-inc-sub">Cell</div>
+      </div>
+      <div class="call-inc-spacer"></div>
+      <div class="call-inc-msg-wrap">
+        <button class="call-send-msg-btn" onclick="void(0)">
+          <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
+          Send Message
+        </button>
+      </div>
+      <div class="call-inc-actions">
+        <button class="call-cir-btn" id="btn-decline">
+          <div class="call-cir-icon decline">${svgPhoneEnd()}</div>
+          <span class="call-cir-label">Decline</span>
+        </button>
+        <button class="call-cir-btn" id="btn-accept">
+          <div class="call-cir-icon accept">${svgPhoneAnswer()}</div>
+          <span class="call-cir-label">Accept</span>
+        </button>
+      </div>
+    </div>`;
+
+  el.querySelector('#btn-decline').addEventListener('click', () => {
+    buildCallEndedScreen(el, cfg, name);
+  });
+  el.querySelector('#btn-accept').addEventListener('click', () => {
+    restoreWallpaper();
+    buildConnectedCall(el, cfg, name, false, 'answered');
+  });
+}
+
+function buildConnectedCall(el, cfg, name, showCalling, outcome) {
+  el.classList.add('call-connected');
+
+  el.innerHTML = `
+    <div class="call-con-wrap">
+      <div class="call-con-info">
+        <div class="call-con-name">${name}</div>
+        <div class="call-con-status" id="call-con-status">${showCalling || outcome !== 'answered' ? 'Calling…' : ''}</div>
+      </div>
+      <div class="call-card">
+        ${callCardBtn('mute',    svgCallMute(),    'mute')}
+        ${callCardBtn('keypad',  svgCallKeypad(),  'keypad')}
+        ${callCardBtn('audio',   svgCallAudio(),   'audio')}
+        ${callCardBtn('add',     svgCallAdd(),     'add call')}
+        ${callCardBtn('video',   svgCallVideo(),   'video')}
+        ${callCardBtn('contacts',svgCallContacts(),'contacts')}
+      </div>
+      <div class="call-end-wrap">
+        <button class="call-end-btn" id="btn-call-end">${svgPhoneEnd()}</button>
+      </div>
+    </div>`;
+
+  el.querySelector('#btn-call-end').addEventListener('click', () => {
+    clearSceneTimers();
+    buildCallEndedScreen(el, cfg, name);
+  });
+
+  // Toggle active state on card buttons
+  el.querySelectorAll('.call-card-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      btn.classList.toggle('active');
+      if (btn.dataset.id === 'mute') {
+        btn.querySelector('.call-card-icon').innerHTML = btn.classList.contains('active') ? svgCallMuted() : svgCallMute();
+      }
+    });
+  });
+
+  // Auto-activate speaker if scene is on-speaker
+  if (cfg.speakerActive) {
+    const audioBtn = el.querySelector('.call-card-btn[data-id="audio"]');
+    if (audioBtn) audioBtn.classList.add('active');
+  }
+
+  // Secret shortcut: double-tap left 1/3 of screen → open dialer
+  let _dTap = 0;
+  el.addEventListener('click', e => {
+    if (e.target.closest('button, .call-card')) return;
+    const r = el.getBoundingClientRect();
+    if (e.clientX - r.left > r.width / 3) return;
+    const now = Date.now();
+    if (now - _dTap < 350) { _dTap = 0; openDialerFromCall(cfg); }
+    else { _dTap = now; }
+  });
+
+  startCallTimer(el, cfg, showCalling, outcome);
+}
+
+function buildCallEndedScreen(el, cfg, name) {
+  el.classList.remove('call-connected');
+  el.classList.add('call-ended');
+  document.getElementById('phone-chrome').classList.remove('incoming-mode');
+
+  const accent = cfg.accentColor || '#4A90D9';
+  el.innerHTML = `
+    <div class="call-ended-wrap">
+      <div class="call-ended-top">
+        <div class="call-ended-header">
+          <svg viewBox="0 0 24 24" style="width:20px;height:20px;fill:#ee4b38;flex-shrink:0">
+            <path d="M20.01 15.38c-1.23 0-2.42-.2-3.53-.56a.977.977 0 0 0-1.01.24l-1.57 1.97c-2.83-1.35-5.48-3.9-6.89-6.83l1.95-1.66c.27-.28.35-.67.24-1.02-.37-1.12-.56-2.32-.56-3.53 0-.54-.45-.99-.99-.99H4.19C3.65 3 3 3.24 3 3.99 3 13.28 10.73 21 20.01 21c.71 0 .99-.63.99-1.18v-3.45c0-.54-.45-.99-.99-.99z" transform="rotate(135 12 12)"/>
+          </svg>
+          <span class="call-ended-label">Call Ended</span>
+        </div>
+        <div class="call-ended-name">${name}</div>
+      </div>
+      <div style="flex:1"></div>
+      <div class="call-ended-actions">
+        <button class="call-cir-btn" onclick="void(0)">
+          <div class="call-cir-icon" style="background:rgba(255,255,255,0.12)">${svgCallContacts()}</div>
+          <span class="call-cir-label">View Contact</span>
+        </button>
+        <div class="call-ended-row">
+          <button class="call-cir-btn" onclick="void(0)">
+            <div class="call-cir-icon accept">${svgPhoneAnswer()}</div>
+            <span class="call-cir-label">Call Back</span>
+          </button>
+          <button class="call-cir-btn" onclick="void(0)">
+            <div class="call-cir-icon" style="background:${accent}">${svgBubble()}</div>
+            <span class="call-cir-label">Message</span>
+          </button>
+        </div>
+      </div>
+    </div>`;
+
+  // Prevent any click inside the call-ended screen from bubbling to parent listeners
+  el.querySelector('.call-ended-wrap').addEventListener('click', e => e.stopPropagation());
+
+}
+
+function startCallTimer(el, cfg, showCalling, outcome) {
+  const statusEl = el.querySelector('#call-con-status');
+  // All delays/intervals go through the scene timer registry: ending the
+  // call or resetting the scene clears them, so a pending "answered" or
+  // voicemail delay can never spawn an interval against a dead screen.
+
+  if (outcome === 'voicemail') {
+    sceneTimeout(() => {
+      callSeconds = 0;
+      statusEl.innerHTML = '<span class="vm-rec">Recording</span>';
+      callTimer = sceneInterval(() => {
+        callSeconds++;
+        const m = Math.floor(callSeconds / 60);
+        const s = String(callSeconds % 60).padStart(2, '0');
+        statusEl.innerHTML = `<span class="vm-rec">${m}:${s}</span>`;
+      }, 1000);
+    }, 3500);
+    return;
+  }
+
+  if (outcome === 'noanswer') {
+    sceneTimeout(() => { statusEl.textContent = 'No Answer'; }, 5000);
+    return;
+  }
+
+  // answered
+  if (showCalling) {
+    sceneTimeout(() => startTimer(), 1200);
+  } else {
+    startTimer();
+  }
+
+  function startTimer() {
+    if (cfg.callDuration) {
+      statusEl.textContent = cfg.callDuration;
+    } else {
+      callSeconds = 0;
+      statusEl.textContent = '0:00';
+      callTimer = sceneInterval(() => {
+        callSeconds++;
+        const m = Math.floor(callSeconds / 60);
+        const s = String(callSeconds % 60).padStart(2, '0');
+        statusEl.textContent = `${m}:${s}`;
+      }, 1000);
+    }
+  }
+}
+
+function callCardBtn(id, iconSvg, label) {
+  return `<button class="call-card-btn" data-id="${id}">
+    <div class="call-card-icon">${iconSvg}</div>
+    <span class="call-card-label">${label}</span>
+  </button>`;
+}
+
+/* --- Dialer confirm overlay (called from connected call screen) --- */
+function openDialerFromCall(cfg) {
+  const callEl = document.getElementById('screen-call');
+  const overlay = document.createElement('div');
+  overlay.className = 'dialer-confirm-overlay';
+  overlay.innerHTML = `
+    <div class="dialer-confirm-card">
+      <div class="dialer-confirm-title">Open Dialer?</div>
+      <div class="dialer-confirm-sub">Press call to return to this scene</div>
+      <div class="dialer-confirm-btns">
+        <button class="dialer-confirm-btn cancel">Cancel</button>
+        <button class="dialer-confirm-btn open">Open</button>
+      </div>
+    </div>`;
+  callEl.appendChild(overlay);
+  overlay.querySelector('.cancel').addEventListener('click', () => overlay.remove());
+  overlay.querySelector('.open').addEventListener('click', () => {
+    overlay.remove();
+    clearSceneTimers();
+    buildDialerScreen(Object.assign({}, cfg, { _fromCallScene: true, _origCfg: cfg }));
+    showScreen('screen-dialer');
+  });
+}
+
+/* --- Dialer --- */
+function buildDialerScreen(cfg) {
+  const el = document.getElementById('screen-dialer');
+
+  el.innerHTML = `
+    <div class="dialer-header">
+      <div class="dialer-dots"><span></span><span></span><span></span></div>
+    </div>
+    <div class="dialer-display">
+      <div class="dialer-display-num" id="dialer-display"></div>
+      <button class="dialer-backspace" id="dialer-bksp" aria-label="Delete">
+        <svg viewBox="0 0 24 24"><path d="M22 3H7c-.69 0-1.23.35-1.59.88L0 12l5.41 8.11c.36.53.9.89 1.59.89h15c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-3 12.59L17.59 17 14 13.41 10.41 17 9 15.59 12.59 12 9 8.41 10.41 7 14 10.59 17.59 7 19 8.41 15.41 12 19 15.59z"/></svg>
+      </button>
+    </div>
+    <div class="dialer-grid" id="dialer-grid">
+      ${[['1',''],['2','ABC'],['3','DEF'],['4','GHI'],['5','JKL'],['6','MNO'],
+         ['7','PQRS'],['8','TUV'],['9','WXYZ'],['*',''],['0','+'],['#','']]
+        .map(([n,s]) => `
+        <button class="dial-key${n==='*'||n==='#'?' sym':''}" data-digit="${n}">
+          <span class="dial-key-num">${n}</span>
+          <span class="dial-key-sub">${s}</span>
+        </button>`).join('')}
+    </div>
+    <div class="dialer-actions">
+      <button class="dialer-call-btn" id="dialer-call-btn">${svgPhoneAnswer()}</button>
+    </div>
+    <div class="dialer-tabs">
+      <div class="dialer-tab active">Keypad</div>
+      <div class="dialer-tab">Recent</div>
+      <div class="dialer-tab">Contacts</div>
+    </div>`;
+
+  const displayEl = el.querySelector('#dialer-display');
+  const bkspBtn   = el.querySelector('#dialer-bksp');
+
+  function syncBackspace() {
+    bkspBtn.classList.toggle('visible', displayEl.textContent.length > 0);
+  }
+
+  el.querySelector('#dialer-grid').addEventListener('click', e => {
+    const key = e.target.closest('.dial-key');
+    if (!key) return;
+    displayEl.textContent += key.dataset.digit;
+    syncBackspace();
+  });
+
+  bkspBtn.addEventListener('click', e => {
+    e.stopPropagation();
+    displayEl.textContent = displayEl.textContent.slice(0, -1);
+    syncBackspace();
+  });
+
+  el.querySelector('#dialer-call-btn').addEventListener('click', () => {
+    clearSceneTimers();
+    if (cfg._fromCallScene && cfg._origCfg) {
+      launchScene(cfg._origCfg);
+    } else {
+      const contact = cfg.contacts && cfg.sceneContact ? cfg.contacts[cfg.sceneContact] : null;
+      const name = contact ? contact.name : (displayEl.textContent || cfg.sceneContact || 'Unknown');
+      buildConnectedCall(document.getElementById('screen-call'), cfg, name, true, 'answered');
+      showScreen('screen-call');
+    }
+  });
+}
+
+/* --- SVG icons for call card --- */
+function svgCallMute() {
+  return `<svg viewBox="0 0 24 24"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm-1-9c0-.55.45-1 1-1s1 .45 1 1v6c0 .55-.45 1-1 1s-1-.45-1-1V5zm6 6c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg>`;
+}
+function svgCallMuted() {
+  return `<svg viewBox="0 0 24 24"><path d="M19 11h-1.7c0 .74-.16 1.43-.43 2.05l1.23 1.23c.56-.98.9-2.09.9-3.28zm-4.02.17c0-.06.02-.11.02-.17V5c0-1.66-1.34-3-3-3S9 3.34 9 5v.18l5.98 5.99zM4.27 3L3 4.27l6.01 6.01V11c0 1.66 1.33 3 2.99 3 .22 0 .44-.03.65-.08l1.66 1.66c-.71.33-1.5.52-2.31.52-2.76 0-5.3-2.1-5.3-5.1H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c.91-.13 1.77-.45 2.54-.9L19.73 21 21 19.73 4.27 3z"/></svg>`;
+}
+function svgCallKeypad() {
+  return `<svg viewBox="0 0 24 24"><circle cx="6" cy="6" r="2"/><circle cx="12" cy="6" r="2"/><circle cx="18" cy="6" r="2"/><circle cx="6" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="18" cy="12" r="2"/><circle cx="6" cy="18" r="2"/><circle cx="12" cy="18" r="2"/><circle cx="18" cy="18" r="2"/></svg>`;
+}
+function svgCallAudio() {
+  return `<svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.06c1.48-.73 2.5-2.25 2.5-4.03zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>`;
+}
+function svgCallAdd() {
+  return `<svg viewBox="0 0 24 24"><path d="M20.01 15.38c-1.23 0-2.42-.2-3.53-.56a.977.977 0 0 0-1.01.24l-1.57 1.97c-2.83-1.35-5.48-3.9-6.89-6.83l1.95-1.66c.27-.28.35-.67.24-1.02-.37-1.12-.56-2.32-.56-3.53 0-.54-.45-.99-.99-.99H4.19C3.65 3 3 3.24 3 3.99 3 13.28 10.73 21 20.01 21c.71 0 .99-.63.99-1.18v-3.45c0-.54-.45-.99-.99-.99z"/><path d="M19 3h-2v3h-3v2h3v3h2V8h3V6h-3z"/></svg>`;
+}
+function svgCallVideo() {
+  return `<svg viewBox="0 0 24 24"><path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/></svg>`;
+}
+function svgCallContacts() {
+  return `<svg viewBox="0 0 24 24"><path d="M20 0H4v2h16V0zM4 24h16v-2H4v2zM20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm-8 2.75c1.24 0 2.25 1.01 2.25 2.25S13.24 11.25 12 11.25 9.75 10.24 9.75 9 10.76 6.75 12 6.75zM17 17H7v-.75c0-1.67 3.33-2.5 5-2.5s5 .83 5 2.5V17z"/></svg>`;
+}
+
+/* ============================================================
+   TEXT SCREEN
+============================================================ */
+function buildTextScreen(cfg) {
+  const contact = cfg.contacts && cfg.sceneContact
+    ? cfg.contacts[cfg.sceneContact]
+    : null;
+
+  const name = contact ? contact.name : (cfg.sceneContact || 'Unknown Number');
+  document.getElementById('text-contact-name').textContent = name;
+
+  // Wire back arrow to reset
+  const backBtn = document.querySelector('.text-hdr-back');
+  if (backBtn) {
+    const freshBack = backBtn.cloneNode(true);
+    backBtn.parentNode.replaceChild(freshBack, backBtn);
+    freshBack.addEventListener('click', () => resetToSetup(cfg));
+  }
+
+  const thread = document.getElementById('text-thread');
+  thread.innerHTML = '';
+
+  if (cfg.priorMessages && Array.isArray(cfg.priorMessages)) {
+    cfg.priorMessages.forEach(msg => {
+      addBubble(thread, msg.text, msg.from === 'me' ? 'me' : 'them', msg.time || null);
+    });
+    thread.scrollTop = thread.scrollHeight;
+  }
+
+  // Clone input + send button to wipe any listeners from a previous scene load
+  const oldInput = document.getElementById('text-input');
+  const inputEl  = oldInput.cloneNode(false);
+  inputEl.value  = '';
+  inputEl.style.height = '';   // clear height leftover from previous run
+  inputEl.removeAttribute('disabled');
+  inputEl.removeAttribute('readonly');
+  oldInput.parentNode.replaceChild(inputEl, oldInput);
+
+  const oldSend = document.getElementById('btn-send');
+  const sendBtn = oldSend.cloneNode(true);
+  sendBtn.classList.remove('ready');
+  oldSend.parentNode.replaceChild(sendBtn, oldSend);
+
+  let hasSent = false;
+
+  function setSendReady(ready) {
+    sendBtn.classList.toggle('ready', ready);
+  }
+
+  function doSend() {
+    if (hasSent) return;
+    const msg = cfg.sceneMessage || inputEl.value.trim() || '…';
+    if (!msg) return;
+    hasSent = true;
+    inputEl.value = '';
+    inputEl.style.height = '';
+    setSendReady(false);
+    addBubble(thread, msg, 'me', 'Today');
+    thread.scrollTop = thread.scrollHeight;
+    inputEl.setAttribute('disabled', 'true');
+
+    if (cfg.sceneReply) {
+      sceneTimeout(() => {
+        addBubble(thread, cfg.sceneReply, 'them', formatCurrentTime(cfg.clockFormat));
+        thread.scrollTop = thread.scrollHeight;
+      }, cfg.sceneReplyDelay || 2000);
+    }
+  }
+
+  sendBtn.addEventListener('click', doSend);
+  // Desktop Enter key
+  inputEl.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); doSend(); }
+  });
+
+  function autoResize(el) {
+    el.style.height = 'auto';
+    el.style.height = el.scrollHeight + 'px';
+  }
+
+  const sceneMsg     = cfg.sceneMessage || null;
+  const charsPerKey  = sceneMsg ? Math.max(1, Math.ceil(sceneMsg.length / 40)) : 1;
+  let pos = 0;
+  let animTimer = null;
+
+  function revealTo(target) {
+    if (animTimer) { clearInterval(animTimer); animTimer = null; }
+    let step = inputEl.value.length;
+    if (step >= target) { inputEl.value = sceneMsg.slice(0, target); autoResize(inputEl); return; }
+    animTimer = sceneInterval(() => {
+      step++;
+      inputEl.value = sceneMsg.slice(0, step);
+      autoResize(inputEl);
+      if (step >= target) { clearInterval(animTimer); animTimer = null; }
+    }, 20);
+  }
+
+  inputEl.addEventListener('input', () => {
+    // Mobile soft-keyboard Enter injects \n into value instead of firing keydown
+    if (inputEl.value.includes('\n')) {
+      inputEl.value = inputEl.value.replace(/\n/g, '');
+      autoResize(inputEl);
+      doSend();
+      return;
+    }
+
+    if (!sceneMsg) return;
+
+    if (inputEl.value.length <= pos) {
+      // backspace — cancel animation and peel back
+      if (animTimer) { clearInterval(animTimer); animTimer = null; }
+      pos = inputEl.value.length;
+      inputEl.value = sceneMsg.slice(0, pos);
+      autoResize(inputEl);
+      setSendReady(pos > 0);
+      return;
+    }
+    pos = Math.min(pos + charsPerKey, sceneMsg.length);
+    setSendReady(pos > 0);
+    if (charsPerKey > 1) {
+      revealTo(pos);
+    } else {
+      inputEl.value = sceneMsg.slice(0, pos);
+      autoResize(inputEl);
+    }
+  });
+
+  // deleteDraft — auto-types a message into the input then erases it
+  if (cfg.deleteDraft && cfg.draftMessage) {
+    inputEl.setAttribute('disabled', 'true');
+    runDeleteDraft(inputEl, cfg.draftMessage, () => {
+      inputEl.removeAttribute('disabled');
+    });
+  }
+}
+
+function runDeleteDraft(inputEl, message, onComplete) {
+  let i = 0;
+  const TYPE_MS = 65;
+  const PAUSE_MS = 1400;
+  const DEL_MS  = 35;
+
+  function typeNext() {
+    if (i < message.length) {
+      inputEl.value = message.slice(0, ++i);
+      sceneTimeout(typeNext, TYPE_MS + Math.random() * 45);
+    } else {
+      sceneTimeout(deleteAll, PAUSE_MS);
+    }
+  }
+
+  function deleteAll() {
+    function delNext() {
+      if (inputEl.value.length > 0) {
+        inputEl.value = inputEl.value.slice(0, -1);
+        sceneTimeout(delNext, DEL_MS);
+      } else if (onComplete) {
+        onComplete();
+      }
+    }
+    delNext();
+  }
+
+  sceneTimeout(typeNext, 900);
+}
+
+function addBubble(container, text, side, time) {
+  if (time) {
+    const timeEl = document.createElement('div');
+    timeEl.className = 'bubble-time';
+    timeEl.textContent = time;
+    container.appendChild(timeEl);
+  }
+  const el = document.createElement('div');
+  el.className = `bubble ${side}`;
+  el.textContent = text;
+  container.appendChild(el);
+}
+
+function formatCurrentTime(format) {
+  const now = new Date();
+  if (format === '24h') {
+    return `${now.getHours()}:${String(now.getMinutes()).padStart(2,'0')}`;
+  }
+  let h = now.getHours();
+  const ampm = h >= 12 ? 'PM' : 'AM';
+  h = h % 12 || 12;
+  return `${h}:${String(now.getMinutes()).padStart(2,'0')} ${ampm}`;
+}
+
+/* ============================================================
+   SCREEN MANAGEMENT
+============================================================ */
+function showScreen(id) {
+  document.querySelectorAll('#phone-chrome .screen').forEach(s => s.classList.add('hidden'));
+  const el = document.getElementById(id);
+  if (el) el.classList.remove('hidden');
+}
+
+function hideScreen(id) {
+  const el = document.getElementById(id);
+  if (el) el.classList.add('hidden');
+}
+
+function resetToSetup(cfg) {
+  clearSceneTimers();
+  _swipeUnlockCfg = null;
+  if (_vfxRO) { _vfxRO.disconnect(); _vfxRO = null; }
+  document.getElementById('phone-chrome').classList.remove('vfx-mode');
+  document.querySelectorAll('#phone-chrome .screen').forEach(s => s.classList.add('hidden'));
+  document.getElementById('phone-chrome').classList.add('hidden');
+  document.getElementById('screen-setup').classList.remove('hidden');
+  // Re-enable text input if it was disabled
+  const inp = document.getElementById('text-input');
+  if (inp) { inp.removeAttribute('disabled'); inp.value = ''; inp.style.height = ''; }
+  const sendReset = document.getElementById('btn-send');
+  if (sendReset) { sendReset.style.opacity = ''; sendReset.classList.remove('ready'); }
+  // Return to stage 2 if char+ep are saved, otherwise stage 1
+  const savedChar = localStorage.getItem(LS_CHAR);
+  const savedEp   = localStorage.getItem(LS_EP);
+  if (savedChar && savedEp && allChars.some(c => c.id === savedChar)) {
+    showStage2(savedChar, savedEp);
+  } else {
+    showStage1();
+  }
+}
+
+/* ============================================================
+   SVG ICONS — loaded from img/icons/ as <img> tags
+============================================================ */
+function statusIcon(src, h, cls) {
+  const c = cls ? ` class="${cls}"` : '';
+  return `<img src="${src}"${c}>`;
+}
+
+function svgAirplane() {
+  return `<svg viewBox="0 0 24 24" width="16" height="16" fill="var(--icon-color)">
+    <path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/>
+  </svg>`;
+}
+
+function svgFingerprint() {
+  return `<svg viewBox="0 0 64 64" width="64" height="64" fill="none" stroke="var(--icon-color)" stroke-width="2" stroke-linecap="round">
+    <path d="M24 10c0 0 3-2 8-2s10 3 10 3"/>
+    <path d="M14 20c0 0 2-8 18-8s18 8 18 8"/>
+    <path d="M18 30c0-7.7 6.3-14 14-14s14 6.3 14 14c0 0 0 4-2 8"/>
+    <path d="M24 34c0-4.4 3.6-8 8-8s8 3.6 8 8c0 5-3 10-8 14"/>
+    <path d="M32 28v10"/>
+  </svg>`;
+}
+
+function svgFaceId() {
+  return `<svg viewBox="0 0 64 64" width="64" height="64" fill="none" stroke="var(--icon-color)" stroke-width="2" stroke-linecap="round">
+    <rect x="8" y="8" width="14" height="6" rx="3"/>
+    <rect x="42" y="8" width="14" height="6" rx="3"/>
+    <rect x="8" y="50" width="14" height="6" rx="3"/>
+    <rect x="42" y="50" width="14" height="6" rx="3"/>
+    <circle cx="22" cy="26" r="3" fill="var(--icon-color)"/>
+    <circle cx="42" cy="26" r="3" fill="var(--icon-color)"/>
+    <path d="M22 40c0 0 3 6 10 6s10-6 10-6"/>
+  </svg>`;
+}
+
+function svgBubble() {
+  return `<svg viewBox="0 0 24 24" width="28" height="28" fill="#fff">
+    <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H6l-2 2V4h16v12z"/>
+  </svg>`;
+}
+
+function svgPhoneEnd() {
+  return `<svg viewBox="0 0 24 24" width="28" height="28" fill="#fff">
+    <path d="M20.01 15.38c-1.23 0-2.42-.2-3.53-.56a.977.977 0 0 0-1.01.24l-1.57 1.97c-2.83-1.35-5.48-3.9-6.89-6.83l1.95-1.66c.27-.28.35-.67.24-1.02-.37-1.12-.56-2.32-.56-3.53 0-.54-.45-.99-.99-.99H4.19C3.65 3 3 3.24 3 3.99 3 13.28 10.73 21 20.01 21c.71 0 .99-.63.99-1.18v-3.45c0-.54-.45-.99-.99-.99z" transform="rotate(135 12 12)"/>
+  </svg>`;
+}
+
+function svgPhoneAnswer() {
+  return `<svg viewBox="0 0 24 24" width="28" height="28" fill="#fff">
+    <path d="M20.01 15.38c-1.23 0-2.42-.2-3.53-.56a.977.977 0 0 0-1.01.24l-1.57 1.97c-2.83-1.35-5.48-3.9-6.89-6.83l1.95-1.66c.27-.28.35-.67.24-1.02-.37-1.12-.56-2.32-.56-3.53 0-.54-.45-.99-.99-.99H4.19C3.65 3 3 3.24 3 3.99 3 13.28 10.73 21 20.01 21c.71 0 .99-.63.99-1.18v-3.45c0-.54-.45-.99-.99-.99z"/>
+  </svg>`;
+}
+
+function notifIcon(key) {
+  // File-based icons from img/icons/ — sized to match the arrow (--sb-arrow-h), inverted to white
+  const fileIcons = ['calendar','msgBubble','missedCall','airplane','warning','checkbox','email','location'];
+  if (fileIcons.includes(key)) {
+    return `<img src="img/icons/${key}.svg" alt="${key}">`;
+  }
+  const icons = {
+    txt:      `<svg viewBox="0 0 24 24" width="14" height="14" fill="var(--icon-color)"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>`,
+    missCall: `<svg viewBox="0 0 24 24" width="14" height="14" fill="var(--icon-color)"><path d="M20.01 15.38c-1.23 0-2.42-.2-3.53-.56a.977.977 0 0 0-1.01.24l-1.57 1.97c-2.83-1.35-5.48-3.9-6.89-6.83l1.95-1.66c.27-.28.35-.67.24-1.02-.37-1.12-.56-2.32-.56-3.53 0-.54-.45-.99-.99-.99H4.19C3.65 3 3 3.24 3 3.99 3 13.28 10.73 21 20.01 21c.71 0 .99-.63.99-1.18v-3.45c0-.54-.45-.99-.99-.99z"/><path d="M15 3v2h3.59l-9.83 9.83 1.41 1.41L20 6.41V10h2V3z"/></svg>`,
+    email:    `<svg viewBox="0 0 24 24" width="14" height="14" fill="var(--icon-color)"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>`,
+    gps:      `<svg viewBox="0 0 24 24" width="14" height="14" fill="var(--icon-color)"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>`,
+    alarm:    `<svg viewBox="0 0 24 24" width="14" height="14" fill="var(--icon-color)"><path d="M22 5.72l-4.6-3.86-1.29 1.53 4.6 3.86L22 5.72zM7.88 3.39L6.6 1.86 2 5.71l1.29 1.53 4.59-3.85zM12.5 8H11v6l4.75 2.85.75-1.23-4-2.37V8zM12 4c-4.97 0-9 4.03-9 9s4.02 9 9 9c4.97 0 9-4.03 9-9s-4.03-9-9-9zm0 16c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z"/></svg>`,
+    sync:     `<svg viewBox="0 0 24 24" width="14" height="14" fill="var(--icon-color)"><path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/></svg>`,
+    mute:     `<svg viewBox="0 0 24 24" width="14" height="14" fill="var(--icon-color)"><path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/></svg>`,
+    download: `<svg viewBox="0 0 24 24" width="14" height="14" fill="var(--icon-color)"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>`,
+    vpn:      `<svg viewBox="0 0 24 24" width="14" height="14" fill="var(--icon-color)"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 4c1.4 0 2.8.5 3.86 1.43l-8.43 8.43A5.93 5.93 0 0 1 6 11c0-3.31 2.69-6 6-6zm0 12c-1.4 0-2.8-.5-3.86-1.43l8.43-8.43A5.93 5.93 0 0 1 18 11c0 3.31-2.69 6-6 6z"/></svg>`,
+  };
+  return icons[key] || null;
+}
+
+function personIconSVG() {
+  return `<svg viewBox="0 0 24 24"><path d="M12 12c2.7 0 5-2.3 5-5s-2.3-5-5-5-5 2.3-5 5 2.3 5 5 5zm0 2c-3.3 0-10 1.7-10 5v2h20v-2c0-3.3-6.7-5-10-5z"/></svg>`;
+}
+
+function placeholderPersonSVG(cls) {
+  return `<div class="${cls}">${personIconSVG()}</div>`;
+}
+
+/* ============================================================
+   HIDDEN CONTROLS — gestures + hotkeys (no visible UI)
+============================================================ */
+function restartScene() {
+  if (!currentCfg) return;
+  clearSceneTimers();
+  launchPhone(currentCfg);
+}
+
+function goToSceneMenu() {
+  if (!currentCfg) return;
+  resetToSetup(currentCfg);
+}
+
+function phoneIsActive() {
+  return !document.getElementById('phone-chrome').classList.contains('hidden');
+}
+
+// ── Keyboard (desktop) ──────────────────────────────────────
+document.addEventListener('keydown', e => {
+  if (!phoneIsActive()) return;
+  if (e.shiftKey && e.key === 'R') { e.preventDefault(); restartScene(); }
+  if (e.key === '`')               { e.preventDefault(); goToSceneMenu(); }
+});
+
+// ── Swipe up to unlock — attached ONCE, armed by buildLockScreen ──
+{
+  const lockEl = document.getElementById('screen-lock');
+  let swipeStartY = null;
+  lockEl.addEventListener('touchstart', e => {
+    if (_swipeUnlockCfg) swipeStartY = e.touches[0].clientY;
+  }, { passive: true });
+  lockEl.addEventListener('touchend', e => {
+    if (!_swipeUnlockCfg || swipeStartY === null) return;
+    const dy = swipeStartY - e.changedTouches[0].clientY;
+    swipeStartY = null;
+    if (dy > 50) {
+      const cfg = _swipeUnlockCfg;
+      _swipeUnlockCfg = null;
+      unlockPhone(cfg);
+    }
+  }, { passive: true });
+}
+
+// ── Home-screen Reset button — bound ONCE (was re-bound per scene) ──
+document.getElementById('btn-reset').addEventListener('click', () => resetToSetup(currentCfg));
+
+// ── Screen wake lock — keep the display on during playback ─────
+let _wakeLock = null;
+async function acquireWakeLock() {
+  if (!('wakeLock' in navigator)) return; // unsupported / insecure context
+  try {
+    _wakeLock = await navigator.wakeLock.request('screen');
+  } catch (e) {
+    console.warn('Wake lock unavailable:', e.message);
+  }
+}
+// The OS silently releases wake locks when the tab is backgrounded —
+// re-acquire whenever we come back while a scene is loaded.
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && currentCfg) acquireWakeLock();
+});
+
+// ── Error toast — errors must be visible during playback, when the
+//    setup-status line is hidden. Tap to dismiss; auto-hides. ──────
+function showErrToast(msg) {
+  let t = document.getElementById('err-toast');
+  if (!t) {
+    t = document.createElement('div');
+    t.id = 'err-toast';
+    t.addEventListener('click', () => { t.style.display = 'none'; });
+    document.body.appendChild(t);
+  }
+  t.textContent = '⚠️ ' + msg;
+  t.style.display = 'block';
+  clearTimeout(t._hideTimer);
+  t._hideTimer = setTimeout(() => { t.style.display = 'none'; }, 8000);
+}
+
+// ── Long press top-left corner → scene menu ─────────────────
+const LP_MS   = 700;
+const LP_PX   = 80;
+let   lpTimer = null;
+
+function inTopLeft(clientX, clientY) {
+  const r = document.getElementById('phone-chrome').getBoundingClientRect();
+  return (clientX - r.left) < LP_PX && (clientY - r.top) < LP_PX;
+}
+
+function lpStart(x, y) {
+  if (!phoneIsActive() || !inTopLeft(x, y)) return;
+  lpTimer = setTimeout(() => { lpTimer = null; goToSceneMenu(); }, LP_MS);
+}
+function lpCancel() { if (lpTimer) { clearTimeout(lpTimer); lpTimer = null; } }
+
+/* NOTE: never name this variable "chrome" — it collides with the
+   browser's window.chrome global and can kill the whole script */
+const phoneChromeEl = document.getElementById('phone-chrome');
+phoneChromeEl.addEventListener('touchstart',  e => lpStart(e.touches[0].clientX, e.touches[0].clientY), { passive: true });
+phoneChromeEl.addEventListener('touchend',    lpCancel);
+phoneChromeEl.addEventListener('touchcancel', lpCancel);
+phoneChromeEl.addEventListener('mousedown',   e => { if (e.button === 0) lpStart(e.clientX, e.clientY); });
+phoneChromeEl.addEventListener('mouseup',     lpCancel);
+
+// ── Double tap top strip → restart ──────────────────────────
+const DT_MS        = 350;
+const TOP_FRAC     = 0.22;
+let   lastTapTime  = 0;
+
+function inTopStrip(clientY) {
+  const r = document.getElementById('phone-chrome').getBoundingClientRect();
+  return (clientY - r.top) < r.height * TOP_FRAC;
+}
+
+phoneChromeEl.addEventListener('touchend', e => {
+  if (!phoneIsActive() || !inTopStrip(e.changedTouches[0].clientY)) return;
+  const now = Date.now();
+  if (now - lastTapTime < DT_MS) { e.preventDefault(); restartScene(); lastTapTime = 0; }
+  else lastTapTime = now;
+}, { passive: false });
+
+phoneChromeEl.addEventListener('dblclick', e => {
+  if (!phoneIsActive() || !inTopStrip(e.clientY)) return;
+  restartScene();
+});
+
+/* ============================================================
+   SERVICE WORKER REGISTRATION
+   Network-first SW: fresh files whenever online, full app
+   from cache when offline. No version bumps needed.
+============================================================ */
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js')
+      .then(reg => reg.update())
+      .catch(err => console.warn('SW registration failed:', err));
+  });
+}
+
+/* ============================================================
+   URL PARAM LOADING — ?char=jodi&scene=s207_02 skips setup
+============================================================ */
+async function checkUrlParams() {
+  const p = new URLSearchParams(window.location.search);
+  const sbh = p.get('sbh');
+  if (sbh) document.documentElement.style.setProperty('--sb-icon-h', sbh + 'px');
+  const arrowh = p.get('arrowh');
+  if (arrowh) document.documentElement.style.setProperty('--sb-arrow-h', arrowh + 'px');
+  const arrowsw = p.get('arrowsw');
+  if (arrowsw) document.documentElement.style.setProperty('--sb-arrow-sw', arrowsw);
+  const charId  = p.get('char');
+  const sceneId = p.get('scene');
+  if (!charId || !sceneId) return false;
+
+  try {
+    const [cRes, sRes] = await Promise.all([
+      fetch(`chars/${charId}.json`),
+      fetch(`scenes/${sceneId}.json`)
+    ]);
+    if (!cRes.ok || !sRes.ok) return false;
+
+    const cData = await cRes.json();
+    const sData = await sRes.json();
+    const cfg   = Object.assign({}, cData, sData);
+
+    const tp = p.get('theme');
+    if (tp === 'light' || tp === 'dark') cfg.theme = tp;
+
+    // Persist so a reset-to-menu from a URL-launched scene lands on the
+    // right character/episode instead of a stale or empty selection
+    localStorage.setItem(LS_CHAR, charId);
+    const ep = epFromSceneId(sceneId);
+    if (ep) localStorage.setItem(LS_EP, ep);
+
+    launchPhone(cfg);
+    return true;
+  } catch(e) {
+    return false;
+  }
+}
+
+/* ============================================================
+   BOOT
+============================================================ */
+/* Build stamp — shows which index.html the browser is actually running */
+document.getElementById('build-stamp').textContent =
+  'build ' + document.lastModified + ' · SW: ' +
+  ('serviceWorker' in navigator && navigator.serviceWorker.controller ? 'active' : 'none');
+
+/* Surface any JS or fetch error on screen so failures are never silent.
+   During playback the setup-status line is hidden, so show a toast too. */
+function surfaceError(msg) {
+  const s = document.getElementById('setup-status');
+  if (s) { s.textContent = '⚠️ ' + msg; s.classList.add('error'); }
+  if (phoneIsActive()) showErrToast(msg);
+}
+window.addEventListener('error', e => surfaceError('JS error: ' + e.message));
+window.addEventListener('unhandledrejection', e => surfaceError((e.reason && e.reason.message) || String(e.reason)));
+
+/* Always run initSetup — even when a URL param launched a scene directly,
+   the setup screen must be populated so reset-to-menu works. */
+checkUrlParams().then(() => initSetup());
+</script>
+</body>
+</html>

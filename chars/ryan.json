@@ -1,0 +1,19 @@
+{
+  "charId": "ryan",
+  "charName": "Ryan Miller",
+  "clockFormat": "12h",
+  "accentColor": "#5A7FA0",
+  "uiSkin": "minimal",
+  "formFactor": "tall",
+  "wallpaperHome": null,
+  "wallpaperLock": null,
+  "lockType": "swipe",
+  "lockPin": null,
+  "biometricStyle": null,
+  "carrierName": "AT&T",
+  "contacts": {
+    "jodi":  { "name": "Jodi Larsen",   "number": "555-0147", "avatar": null },
+    "tyson": { "name": "Tyson Bernard", "number": "555-0209", "avatar": null },
+    "a_s":   { "name": "A.S",           "number": "555-0318", "avatar": null }
+  }
+}

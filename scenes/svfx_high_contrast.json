@@ -1,0 +1,7 @@
+{
+  "sceneId": "svfx_high_contrast",
+  "sceneLabel": "High Contrast Foreground",
+  "charId": "vfx",
+  "sceneType": "vfx_tracker",
+  "vfxVariant": "high_contrast"
+}

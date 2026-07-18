@@ -1,0 +1,19 @@
+{
+  "sceneId": "s207_19",
+  "sceneLabel": "207 Sc19 — Ryan outgoing call (deputy)",
+  "charId": "ryan",
+  "theme": "dark",
+  "clockTime": "10:47 AM",
+  "battery": 4,
+  "batteryCharging": false,
+  "signal": 2,
+  "wifi": 0,
+  "airplaneMode": false,
+  "startLocked": false,
+  "notifications": [],
+  "sceneType": "call",
+  "sceneContact": "Station",
+  "callDir": "outgoing",
+  "callOutcome": "answered",
+  "callDuration": null
+}

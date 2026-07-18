@@ -1,0 +1,19 @@
+{
+  "sceneId": "s208_74a",
+  "sceneLabel": "208 Sc74A — Ernie active call with Col. Andrews",
+  "charId": "ernie",
+  "theme": "dark",
+  "clockTime": "2:48 PM",
+  "battery": 2,
+  "batteryCharging": false,
+  "signal": 2,
+  "wifi": 0,
+  "airplaneMode": false,
+  "startLocked": false,
+  "notifications": [],
+  "sceneType": "call",
+  "sceneContact": "col_andrews",
+  "callDir": "outgoing",
+  "callOutcome": "answered",
+  "callDuration": null
+}
