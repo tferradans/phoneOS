@@ -1,4 +1,4 @@
-/* build: 2026-07-18 01:20:17 — auto-stamped by deploy.py; the byte change forces every phone to reinstall the SW and re-precache all content */
+/* build: e34b64b66d3d — content hash, auto-stamped by deploy.py; a changed stamp forces phones to reinstall the SW and re-precache all content */
 /* ============================================================
    sw.js — Service Worker (network-first everywhere)
 
