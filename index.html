@@ -5393,6 +5393,7 @@ const SETTINGS_DEFS = [
   { key:'fontScale', group:'Global',   label:'Text size',        type:'range', min:0.8, max:1.5, step:0.05, def:1,  fmt:v=>Math.round(v*100)+'%', props:['--font-scale'], apply:(r,v)=>r.setProperty('--font-scale', v) },
   { key:'themeMode', group:'Global',   label:'Theme',            type:'segment', options:['auto','dark','light'], def:'auto', props:[], apply:()=>reapplyTheme() },
   { key:'dim',       group:'Global',   label:'Screen dim',       type:'range', min:0, max:60, step:5, def:0, fmt:v=>v+'%', props:['--screen-dim'], apply:(r,v)=>r.setProperty('--screen-dim', v/100) },
+  { key:'notchTop',  group:'Global',   label:'Notch inset',      type:'range', min:0, max:60, step:1, def:0, fmt:v=>v===0?'auto':v+'px', props:['--safe-top'], apply:(r,v)=> v>0 ? r.setProperty('--safe-top', v+'px') : r.removeProperty('--safe-top') },
   { key:'accent',    group:'Global',   label:'Accent',           type:'color', def:'#4A90D9', props:['--accent'],   apply:(r,v)=>r.setProperty('--accent', v) },
   { key:'positive',  group:'Global',   label:'Answer green',     type:'color', def:'#4ddc60', props:['--positive'], apply:(r,v)=>r.setProperty('--positive', v) },
   { key:'negative',  group:'Global',   label:'Decline red',      type:'color', def:'#ee4b38', props:['--negative'], apply:(r,v)=>r.setProperty('--negative', v) },
@@ -5759,10 +5760,27 @@ if (window.visualViewport) {
 /* ============================================================
    BOOT
 ============================================================ */
-/* Build stamp — shows which index.html the browser is actually running */
-document.getElementById('build-stamp').textContent =
-  'build ' + document.lastModified + ' · SW: ' +
-  ('serviceWorker' in navigator && navigator.serviceWorker.controller ? 'active' : 'none');
+/* Build stamp — shows which index.html the browser is actually running,
+   plus viewport diagnostics for chasing notch/cutout issues per device:
+   display mode, resolved safe-area-inset-top, and viewport vs screen
+   size (viewport shorter than screen = the install shell is letterboxing
+   the cutout row → remove and re-add the home-screen icon). */
+function stampBuild() {
+  const probe = document.createElement('div');
+  probe.style.cssText = 'position:fixed;left:-9999px;top:0;height:env(safe-area-inset-top,0px)';
+  document.body.appendChild(probe);
+  const inset = Math.round(probe.getBoundingClientRect().height);
+  probe.remove();
+  const mode = ['fullscreen', 'standalone', 'minimal-ui']
+    .find(m => matchMedia('(display-mode: ' + m + ')').matches) || 'browser';
+  document.getElementById('build-stamp').textContent =
+    'build ' + document.lastModified + ' · SW: ' +
+    ('serviceWorker' in navigator && navigator.serviceWorker.controller ? 'active' : 'none') +
+    ' · ' + mode + ' · inset ' + inset + 'px · view ' +
+    window.innerWidth + 'x' + window.innerHeight + ' of ' + screen.width + 'x' + screen.height;
+}
+stampBuild();
+window.addEventListener('resize', stampBuild);
 
 /* Surface any JS or fetch error on screen so failures are never silent.
    During playback the setup-status line is hidden, so show a toast too. */
