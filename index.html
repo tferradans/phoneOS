@@ -5758,6 +5758,39 @@ if (window.visualViewport) {
 }
 
 /* ============================================================
+   FULLSCREEN RESCUE — claim the camera-cutout row on Android
+   Even in fullscreen display mode, Android letterboxes the app
+   window below the cutout (window shorter than the screen, inset
+   0) — installed-app fullscreen ignores viewport-fit=cover. The
+   Fullscreen API is the path Chrome does honor, but it needs a
+   user gesture: on the first tap, if we're letterboxed, go true
+   immersive. env(safe-area-inset-top) starts reporting the real
+   cutout height once we're in.
+============================================================ */
+(function () {
+  if (!document.documentElement.requestFullscreen) return;
+  let pending = false;
+  function typing() {
+    const a = document.activeElement;
+    return a && (a.tagName === 'INPUT' || a.tagName === 'TEXTAREA' || a.isContentEditable);
+  }
+  function letterboxed() {
+    return matchMedia('(display-mode: fullscreen)').matches &&
+           !document.fullscreenElement &&
+           (screen.height - window.innerHeight > 8 || screen.width - window.innerWidth > 8);
+  }
+  window.addEventListener('pointerup', () => {
+    // typing guard: an open soft keyboard also shrinks the window —
+    // don't mistake it for letterboxing (and never yank the keyboard)
+    if (pending || typing() || !letterboxed()) return;
+    pending = true;
+    document.documentElement.requestFullscreen({ navigationUI: 'hide' })
+      .catch(() => {})
+      .finally(() => { pending = false; });
+  }, { capture: true, passive: true });
+})();
+
+/* ============================================================
    BOOT
 ============================================================ */
 /* Build stamp — shows which index.html the browser is actually running,
