@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="mobile-web-app-capable" content="yes">
@@ -60,7 +60,8 @@
 
     /* ── Chrome ── */
     color-scheme: dark;        /* native widgets (select popups, pickers) render dark */
-    --status-height: 32px;
+    --safe-top: env(safe-area-inset-top, 0px);   /* notch / dynamic-island inset */
+    --status-height: calc(32px + var(--safe-top));
     --font-ui:       'SFUI', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   }
 
@@ -95,7 +96,9 @@
   .screen {
     position: fixed;
     top: var(--status-height);
-    left: 0; right: 0; bottom: 0;
+    /* --kb = soft-keyboard overlap (set by JS): the screen's bottom edge
+       rises above the keyboard while the status bar stays pinned on top */
+    left: 0; right: 0; bottom: var(--kb, 0px);
     display: flex;
     flex-direction: column;
     transition: opacity 0.35s ease;
@@ -392,7 +395,8 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 20px 0 16px;
+    /* content sits in the 32px band below the notch; the bg fills the notch */
+    padding: var(--safe-top) 20px 0 16px;
     color: var(--sb-ink, var(--icon-color));
     flex-shrink: 0;
   }
@@ -5725,6 +5729,31 @@ async function checkUrlParams() {
   } catch(e) {
     return false;
   }
+}
+
+/* ============================================================
+   SOFT KEYBOARD — keep the phone chrome pinned
+   iOS doesn't shrink the layout viewport when the keyboard opens; it
+   pans the whole page up instead, sliding the status bar off screen.
+   Here we measure the keyboard's overlap via visualViewport, expose it
+   as --kb (screens lift their bottom edge above it), and undo the
+   browser's pan so the top chrome never moves.
+============================================================ */
+if (window.visualViewport) {
+  const vv = window.visualViewport;
+  let kbRaf = null;
+  function applyKb() {
+    kbRaf = null;
+    const kb = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
+    document.documentElement.style.setProperty('--kb', kb + 'px');
+    if (window.scrollY || vv.offsetTop) window.scrollTo(0, 0);
+    // keep an open message thread pinned to its newest bubble
+    const thread = document.querySelector('#screen-text:not(.hidden) .text-thread');
+    if (thread) thread.scrollTop = thread.scrollHeight;
+  }
+  function queueKb() { if (!kbRaf) kbRaf = requestAnimationFrame(applyKb); }
+  vv.addEventListener('resize', queueKb);
+  vv.addEventListener('scroll', queueKb);
 }
 
 /* ============================================================
