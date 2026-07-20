@@ -1,0 +1,29 @@
+{
+  "sceneId": "s207_48_tracker",
+  "sceneLabel": "207 Sc48 — Cam 12 coords on tracker (from thread link)",
+  "charId": "jodi",
+  "clockTime": "1:38 PM",
+  "battery": 4,
+  "signal": 2,
+  "wifi": 0,
+  "airplaneMode": false,
+  "startLocked": false,
+  "notifications": [],
+  "sceneType": "tracker",
+  "mapImage": "maps/temp_topo.jpg",
+  "mapZoom": 1.5,
+  "mapX": 31,
+  "mapY": 63,
+  "target": {
+    "x": 31,
+    "y": 63,
+    "label": "CAM 12",
+    "id": "TRAIL CAM — NPS"
+  },
+  "viewer": null,
+  "telemetry": [
+    { "label": "From", "value": "BERNARD, TYSON" },
+    { "label": "Origin", "value": "NPS HQ" },
+    { "label": "Location", "value": "48.7621° N, 118.2043° W" }
+  ]
+}

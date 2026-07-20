@@ -1,4 +1,4 @@
-/* build: 79a512df4549 — content hash, auto-stamped by deploy.py; a changed stamp forces phones to reinstall the SW and re-precache all content */
+/* build: 98b1f50bec2b — content hash, auto-stamped by deploy.py; a changed stamp forces phones to reinstall the SW and re-precache all content */
 /* ============================================================
    sw.js — Service Worker (network-first everywhere)
 
@@ -53,9 +53,12 @@ self.addEventListener('activate', event => {
 });
 
 /* ---- Fetch strategy ----
-   Immutable assets (fonts, images, audio) → cache-first: they never
-   change, so never wait on the network for them.
-   Everything else (html/json/js)         → network-first with a 3s
+   Static assets (fonts, images, audio) → cache-first with BACKGROUND
+   revalidate: the cached copy is served instantly (on-set speed,
+   works fully offline), then a background fetch refreshes the cache
+   when online — so an in-place image swap (same filename, new bytes)
+   propagates on the NEXT view instead of never.
+   Everything else (html/json/js)       → network-first with a 3s
    timeout racing the cache. On set Wi-Fi that is connected-but-dead,
    a plain fetch can hang for 30s+ before erroring — the timeout makes
    the app fall back to the cached copy almost immediately. If nothing
@@ -77,11 +80,20 @@ self.addEventListener('fetch', event => {
   const url = new URL(event.request.url);
   if (url.origin !== self.location.origin) return; // don't touch cross-origin
 
-  // Cache-first for immutable assets
+  // Cache-first + background revalidate for static assets
   if (STATIC_EXT.test(url.pathname)) {
     event.respondWith((async () => {
       const cached = await caches.match(event.request, { ignoreSearch: true });
-      if (cached) return cached;
+      if (cached) {
+        // Serve instantly; refresh the cached copy in the background
+        // (silently skipped offline / on dead Wi-Fi)
+        event.waitUntil(
+          fetch(event.request)
+            .then(r => cachePut(event.request, r))
+            .catch(() => {})
+        );
+        return cached;
+      }
       try {
         return await cachePut(event.request, await fetch(event.request));
       } catch (err) {
