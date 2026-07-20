@@ -60,7 +60,11 @@
 
     /* ── Chrome ── */
     color-scheme: dark;        /* native widgets (select popups, pickers) render dark */
-    --safe-top: env(safe-area-inset-top, 0px);   /* notch / dynamic-island inset */
+    /* notch / dynamic-island inset: the device-reported value, or the
+       JS-estimated cutout height (--safe-top-est) on devices that
+       extend into the cutout but report an inset of 0 */
+    --safe-top-est: 0px;
+    --safe-top: max(env(safe-area-inset-top, 0px), var(--safe-top-est));
     --status-height: calc(32px + var(--safe-top));
     --font-ui:       'SFUI', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   }
@@ -5784,10 +5788,36 @@ if (window.visualViewport) {
     // don't mistake it for letterboxing (and never yank the keyboard)
     if (pending || typing() || !letterboxed()) return;
     pending = true;
+    const preH = window.innerHeight;
     document.documentElement.requestFullscreen({ navigationUI: 'hide' })
+      .then(() => estimateCutout(preH))
       .catch(() => {})
       .finally(() => { pending = false; });
   }, { capture: true, passive: true });
+
+  /* Some devices extend into the cutout but still report an
+     env(safe-area-inset-top) of 0, leaving the status icons under the
+     camera. The letterbox itself told us the cutout height: entering
+     fullscreen grows the window by exactly that much. When env() is
+     dead, use the growth as the inset (--safe-top-est). */
+  function estimateCutout(preH) {
+    let tries = 0;
+    (function settle() {
+      // the window takes its new size a few frames after the promise
+      if (window.innerHeight === preH && tries++ < 30) return requestAnimationFrame(settle);
+      const grown = Math.min(80, window.innerHeight - preH);
+      if (grown > 4 && measurePx('env(safe-area-inset-top, 0px)') < 4) {
+        document.documentElement.style.setProperty('--safe-top-est', grown + 'px');
+      }
+      stampBuild();
+    })();
+  }
+  document.addEventListener('fullscreenchange', () => {
+    // letterboxing comes back when fullscreen drops — the estimate must not
+    if (!document.fullscreenElement) {
+      document.documentElement.style.removeProperty('--safe-top-est');
+    }
+  });
 })();
 
 /* ============================================================
@@ -5798,18 +5828,25 @@ if (window.visualViewport) {
    display mode, resolved safe-area-inset-top, and viewport vs screen
    size (viewport shorter than screen = the install shell is letterboxing
    the cutout row → remove and re-add the home-screen icon). */
-function stampBuild() {
+/* Resolve a CSS length to pixels via a throwaway probe element */
+function measurePx(expr) {
   const probe = document.createElement('div');
-  probe.style.cssText = 'position:fixed;left:-9999px;top:0;height:env(safe-area-inset-top,0px)';
+  probe.style.cssText = 'position:fixed;left:-9999px;top:0;height:' + expr;
   document.body.appendChild(probe);
-  const inset = Math.round(probe.getBoundingClientRect().height);
+  const px = Math.round(probe.getBoundingClientRect().height);
   probe.remove();
+  return px;
+}
+
+function stampBuild() {
+  const eff = measurePx('var(--safe-top)');                 // what the status bar uses
+  const raw = measurePx('env(safe-area-inset-top, 0px)');   // what the device reports
   const mode = ['fullscreen', 'standalone', 'minimal-ui']
     .find(m => matchMedia('(display-mode: ' + m + ')').matches) || 'browser';
   document.getElementById('build-stamp').textContent =
     'build ' + document.lastModified + ' · SW: ' +
     ('serviceWorker' in navigator && navigator.serviceWorker.controller ? 'active' : 'none') +
-    ' · ' + mode + ' · inset ' + inset + 'px · view ' +
+    ' · ' + mode + ' · inset ' + eff + 'px (env ' + raw + 'px) · view ' +
     window.innerWidth + 'x' + window.innerHeight + ' of ' + screen.width + 'x' + screen.height;
 }
 stampBuild();
