@@ -1,4 +1,4 @@
-/* build: dc1018c4605c — content hash, auto-stamped by deploy.py; a changed stamp forces phones to reinstall the SW and re-precache all content */
+/* build: 79a512df4549 — content hash, auto-stamped by deploy.py; a changed stamp forces phones to reinstall the SW and re-precache all content */
 /* ============================================================
    sw.js — Service Worker (network-first everywhere)
 

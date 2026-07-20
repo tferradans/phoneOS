@@ -4288,7 +4288,10 @@ function svgBolt() {
 function droneDialSVG() {
   const cx = 230, cy = 120, r = 175;
   let ticks = '';
-  for (let a = -45; a <= 45; a += 5) {
+  // Full-circle ticks: the visible window only shows ~±45°, but the
+  // group rotates up to ±60° — a complete ring can never run out of
+  // lines, whatever the cap.
+  for (let a = -180; a < 180; a += 5) {
     const rad = Math.PI * (180 + a) / 180;
     const major = a % 15 === 0;
     const len = major ? 18 : 10;
@@ -4335,14 +4338,19 @@ MODULES.drone = {
       </div>`;
 
     // ── Gyro-driven attitude dial. In landscape (stage rotated 90°),
-    //    tilt about the phone's long axis = gamma. Flip DIAL_SIGN if
-    //    the on-device direction reads inverted. ──
+    //    tilt about the phone's long axis = gamma. Zero reads with the
+    //    phone held UPRIGHT (screen vertical, facing the operator) —
+    //    controller stance — not lying flat. gamma wraps ±90 exactly at
+    //    that point, so re-zero on each side of the wrap: both branches
+    //    meet continuously at 0° when vertical. Flip DIAL_SIGN if the
+    //    on-device direction reads inverted. ──
     const DIAL_SIGN = 1;
     const dialTicks = el.querySelector('#drone-dial-ticks');
     const dialNum   = el.querySelector('#drone-dial-num');
     ctx.listen(window, 'deviceorientation', e => {
       if (e.gamma == null) return;
-      const angle = Math.max(-60, Math.min(60, DIAL_SIGN * e.gamma));
+      const tilt = e.gamma >= 0 ? e.gamma - 90 : e.gamma + 90;
+      const angle = Math.max(-60, Math.min(60, DIAL_SIGN * tilt));
       dialTicks.setAttribute('transform', `rotate(${angle.toFixed(1)} 230 120)`);
       dialNum.textContent = `${Math.round(angle)}°`;
     });
