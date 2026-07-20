@@ -1,0 +1,17 @@
+{
+  "sceneId": "s208_45",
+  "sceneLabel": "208 Sc45 — Rattler calls Ernie (deal moves up)",
+  "charId": "rattler",
+  "clockTime": "1:34 PM",
+  "battery": 3,
+  "signal": 2,
+  "wifi": 1,
+  "airplaneMode": false,
+  "startLocked": false,
+  "notifications": [],
+  "sceneType": "call",
+  "sceneContact": "ernie",
+  "callDir": "outgoing",
+  "callOutcome": "answered",
+  "callDuration": null
+}

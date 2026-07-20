@@ -2,24 +2,47 @@
   "sceneId": "s208_17a",
   "sceneLabel": "208 Sc17A — Ernie checks missed calls/texts + deletes reply",
   "charId": "ernie",
-  "theme": "dark",
   "clockTime": "9:44 AM",
   "battery": 3,
   "batteryCharging": false,
   "signal": 2,
   "wifi": 0,
   "airplaneMode": false,
-  "startLocked": false,
-  "notifications": ["missCall", "txt"],
+  "startLocked": true,
+  "notifications": [],
+  "lockNotifications": [
+    {
+      "app": "Missed Call",
+      "icon": "missedCall",
+      "title": "J. Larsen",
+      "text": "2 missed calls"
+    },
+    {
+      "app": "New Message",
+      "icon": "msgBubble",
+      "title": "J. Larsen",
+      "text": "starting to get worried…"
+    }
+  ],
   "sceneType": "text",
   "sceneContact": "jodi",
   "priorMessages": [
-    { "from": "them", "text": "Hey, you coming in?",                              "time": "8:12 AM" },
-    { "from": "them", "text": "Ernie, call me back",                              "time": "8:47 AM" },
-    { "from": "them", "text": "starting to get worried. It's not like you to not show up...", "time": "9:28 AM" }
+    {
+      "from": "them",
+      "text": "Hey, you coming in?"
+    },
+    {
+      "from": "them",
+      "text": "Ernie, call me back"
+    },
+    {
+      "from": "them",
+      "text": "starting to get worried. It's not like you to not show up..."
+    }
   ],
   "deleteDraft": true,
   "draftMessage": "I'm fine, just needed some air",
   "sceneMessage": null,
-  "sceneReply": null
+  "sceneReply": null,
+  "lockType": "swipe"
 }

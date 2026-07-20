@@ -1,0 +1,31 @@
+{
+  "sceneId": "s207_96_jodi",
+  "sceneLabel": "207 Sc96 — Jodi watches the pickup point",
+  "charId": "jodi",
+  "clockTime": "6:52 PM",
+  "battery": 3,
+  "signal": 2,
+  "wifi": 0,
+  "airplaneMode": false,
+  "startLocked": false,
+  "notifications": [],
+  "sceneType": "map",
+  "mapMode": "info",
+  "mapImage": "maps/temp_topo.jpg",
+  "mapZoom": 1.4,
+  "mapX": 55,
+  "mapY": 45,
+  "title": "Pinned Location",
+  "subtitle": "Mile 12 turnout — Crystal Ridge Rd",
+  "target": {
+    "name": "Pickup",
+    "initials": "P",
+    "x": 55,
+    "y": 45
+  },
+  "viewer": null,
+  "path": null,
+  "stats": {},
+  "cardBattery": "",
+  "cardSignal": ""
+}

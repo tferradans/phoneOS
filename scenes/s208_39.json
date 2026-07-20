@@ -1,0 +1,20 @@
+{
+  "sceneId": "s208_39",
+  "sceneLabel": "208 Sc39 — Tyson incoming call from Jodi",
+  "charId": "tyson",
+  "clockTime": "12:20 PM",
+  "battery": 4,
+  "signal": 3,
+  "wifi": 2,
+  "airplaneMode": false,
+  "startLocked": false,
+  "notifications": [
+    "email",
+    "calendar"
+  ],
+  "sceneType": "call",
+  "sceneContact": "jodi",
+  "callDir": "incoming",
+  "callOutcome": null,
+  "callDuration": null
+}

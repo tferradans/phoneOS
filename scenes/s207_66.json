@@ -2,19 +2,35 @@
   "sceneId": "s207_66",
   "sceneLabel": "207 Sc66 — Jodi's phone — Clive GPS ping",
   "charId": "jodi",
-  "theme": "dark",
-  "clockTime": "3:24 PM",
+  "clockTime": "2:47 PM",
   "battery": 3,
-  "batteryCharging": false,
   "signal": 2,
   "wifi": 0,
   "airplaneMode": false,
   "startLocked": false,
-  "notifications": ["gps"],
+  "notifications": [],
   "sceneType": "map",
-  "appLabel": "Find My",
-  "mapTitle": "Clive Tucker",
-  "mapSubtitle": "Bear Claw Junction — Updated just now",
-  "mapPinX": 52,
-  "mapPinY": 45
+  "mapImage": "maps/temp_topo.jpg",
+  "mapZoom": 1,
+  "mapX": 50,
+  "mapY": 50,
+  "title": "Shared Location",
+  "subtitle": "Clive Tucker — 40.8781° N, 105.6298° W",
+  "target": {
+    "name": "Clive Tucker",
+    "x": 60,
+    "y": 44
+  },
+  "viewer": {
+    "x": 40,
+    "y": 33
+  },
+  "path": "auto",
+  "stats": {
+    "speed": "0.0 mph",
+    "distance": "1.2 mi",
+    "elevation": "5,120 ft"
+  },
+  "cardBattery": "64%",
+  "cardSignal": "Strong"
 }

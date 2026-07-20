@@ -1,0 +1,16 @@
+{
+  "sceneId": "s207_67",
+  "sceneLabel": "207 Sc67 — Drone app — looking for signal",
+  "charId": "tyson_drone",
+  "clockTime": "2:41 PM",
+  "battery": 4,
+  "signal": 1,
+  "wifi": 0,
+  "airplaneMode": false,
+  "startLocked": false,
+  "notifications": [],
+  "sceneType": "drone",
+  "droneMode": "offline",
+  "droneName": "NPS-1",
+  "droneSearchText": "Looking for signal…"
+}

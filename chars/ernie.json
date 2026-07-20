@@ -12,8 +12,20 @@
   "biometricStyle": null,
   "carrierName": "T-Mobile",
   "contacts": {
-    "jodi":        { "name": "Jodi Larsen",  "number": "555-0147", "avatar": null },
-    "rattler":     { "name": "Rattler",       "number": "555-0388", "avatar": null },
-    "col_andrews": { "name": "Col. Andrews",  "number": "555-0412", "avatar": null }
+    "jodi": {
+      "name": "J. Larsen",
+      "number": "555-0147",
+      "avatar": "contacts/ernie_jodi.jpg"
+    },
+    "rattler": {
+      "name": "Rattler",
+      "number": "555-0388",
+      "avatar": null
+    },
+    "col_andrews": {
+      "name": "Col. Andrews",
+      "number": "555-0412",
+      "avatar": null
+    }
   }
 }

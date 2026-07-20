@@ -1,0 +1,39 @@
+{
+  "sceneId": "s208_119",
+  "sceneLabel": "208 Sc119 — Jodi gets Ernie's text, steps out",
+  "charId": "jodi",
+  "clockTime": "8:58 PM",
+  "battery": 2,
+  "signal": 3,
+  "wifi": 2,
+  "airplaneMode": false,
+  "startLocked": true,
+  "lockType": "swipe",
+  "notifications": [],
+  "lockNotifications": [
+    {
+      "app": "New Message",
+      "icon": "msgBubble",
+      "title": "Ernie Estevez",
+      "text": "Come outside."
+    }
+  ],
+  "sceneType": "text",
+  "sceneContact": "ernie",
+  "priorMessages": [
+    {
+      "from": "me",
+      "text": "starting to get worried. It's not like you to not show up..."
+    },
+    {
+      "from": "me",
+      "text": "I don't know what's going on. But if you're really involved in all this, come clean. Please."
+    },
+    {
+      "from": "them",
+      "text": "Come outside."
+    }
+  ],
+  "sceneMessage": null,
+  "sceneReply": null
+}

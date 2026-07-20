@@ -1,0 +1,32 @@
+{
+  "sceneId": "s207_21",
+  "sceneLabel": "207 Sc21 — Meeks reviews hiker documents (tablet)",
+  "charId": "meeks_tablet",
+  "clockTime": "10:12 AM",
+  "battery": 4,
+  "signal": 2,
+  "wifi": 2,
+  "airplaneMode": false,
+  "startLocked": false,
+  "notifications": [],
+  "sceneType": "docs",
+  "docTitle": "Files",
+  "docs": [
+    {
+      "title": "Backcountry Permit — CRNP-4471",
+      "file": "docs/207_permit_whitmore.md",
+      "meta": "Permit register · Bear Claw Junction"
+    },
+    {
+      "title": "Route Itinerary — Whitmore Party",
+      "file": "docs/207_itinerary_whitmore.md",
+      "meta": "3 days · Upper Basin"
+    },
+    {
+      "title": "Trail Advisory — Sector 7",
+      "file": "docs/207_advisory.md",
+      "meta": "Posted this season"
+    }
+  ],
+  "docOpen": null
+}

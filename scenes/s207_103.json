@@ -1,21 +1,29 @@
 {
   "sceneId": "s207_103",
   "sceneLabel": "207 Sc103 — Steel Reaper tracker (Ryan's location)",
-  "charId": "manny",
-  "theme": "dark",
+  "charId": "steel_reaper",
   "clockTime": "7:14 PM",
   "battery": 3,
-  "batteryCharging": false,
   "signal": 3,
   "wifi": 0,
   "airplaneMode": false,
   "startLocked": false,
   "notifications": [],
   "sceneType": "tracker",
-  "appLabel": "Track",
-  "trackerLabel": "Live Location",
-  "trackerTarget": "R. Miller",
-  "trackerStatus": "Stationary — Stonehaven Alley",
-  "mapPinX": 48,
-  "mapPinY": 52
+  "mapImage": "maps/temp_aerial.jpg",
+  "mapZoom": 1,
+  "mapX": 50,
+  "mapY": 50,
+  "target": {
+    "x": 52,
+    "y": 34,
+    "label": "MILLER",
+    "id": "ID: 121901489NPS"
+  },
+  "viewer": null,
+  "telemetry": {
+    "distance": "3.1 MILES",
+    "speed": "0.0 MPH",
+    "coords": "40.6601°, 105.8491°"
+  }
 }

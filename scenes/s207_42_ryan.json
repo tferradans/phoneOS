@@ -1,0 +1,32 @@
+{
+  "sceneId": "s207_42_ryan",
+  "sceneLabel": "207 Sc42 — Ryan checks phone again (nothing)",
+  "charId": "ryan",
+  "clockTime": "12:58 PM",
+  "battery": 3,
+  "signal": 0,
+  "wifi": 0,
+  "airplaneMode": false,
+  "startLocked": true,
+  "lockType": "swipe",
+  "notifications": [],
+  "lockNotifications": [
+    {
+      "app": "System",
+      "icon": "warning",
+      "title": "No Signal",
+      "text": "Searching for connection…",
+      "opens": "noservice"
+    }
+  ],
+  "sceneType": "text",
+  "sceneContact": null,
+  "priorMessages": [
+    {
+      "from": "me",
+      "text": "Hey man, what's going on? I need you to call me back."
+    }
+  ],
+  "sceneMessage": null,
+  "sceneReply": null
+}

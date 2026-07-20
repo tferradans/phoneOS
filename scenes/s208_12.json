@@ -2,7 +2,6 @@
   "sceneId": "s208_12",
   "sceneLabel": "208 Sc12 — Jodi outgoing call to Ryan (crime scene)",
   "charId": "jodi",
-  "theme": "dark",
   "clockTime": "9:21 AM",
   "battery": 4,
   "batteryCharging": false,
@@ -10,7 +9,9 @@
   "wifi": 0,
   "airplaneMode": false,
   "startLocked": false,
-  "notifications": ["email"],
+  "notifications": [
+    "email"
+  ],
   "sceneType": "call",
   "sceneContact": "ryan",
   "callDir": "outgoing",

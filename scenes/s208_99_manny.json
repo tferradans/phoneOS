@@ -2,19 +2,59 @@
   "sceneId": "s208_99_manny",
   "sceneLabel": "208 Sc99 — Manny crypto wallet (150 APEX-COIN)",
   "charId": "manny",
-  "theme": "dark",
   "clockTime": "4:33 PM",
   "battery": 3,
-  "batteryCharging": false,
   "signal": 2,
   "wifi": 0,
   "airplaneMode": false,
   "startLocked": false,
   "notifications": [],
   "sceneType": "wallet",
-  "appLabel": "Wallet",
   "coinName": "APEX-COIN",
-  "transferAmount": "150",
-  "transferUSD": "~$15,000,000 USD",
-  "recipientAddress": "0x4F2a8B1c3E9d7A05F6b8C2e1D4a9B7c3E5f0A91"
+  "coinAmount": "150",
+  "coinRate": "1 APEX = $100,000 ▲ 2.4%",
+  "coinUSD": "$15,000,000",
+  "recipientAddress": "0x4F2a8B1c3E9d7A05F6b8C2e1D4a9B7c3E5f0A91",
+  "transactions": [
+    {
+      "dir": "in",
+      "amount": "45",
+      "address": "0x81cE07bb42D9f1A6e35C28d40b96f22a17e94409"
+    },
+    {
+      "dir": "in",
+      "amount": "38",
+      "address": "0x3Fa2c815Bd06E97f4a12D30C88b5461eF7209a2C"
+    },
+    {
+      "dir": "out",
+      "amount": "15",
+      "address": "0xB9014Ce67aF823D15b09E4d6C2a83f5061e977Ed"
+    },
+    {
+      "dir": "in",
+      "amount": "32.5",
+      "address": "0x5D18aE92C64f07B3d81A25e9F60C4b7128d3C33A"
+    },
+    {
+      "dir": "in",
+      "amount": "26",
+      "address": "0x81cE07bb42D9f1A6e35C28d40b96f22a17e94409"
+    },
+    {
+      "dir": "out",
+      "amount": "10",
+      "address": "0x22aF64D905eC17A8b3F42E60d91C8a5b76f2518B"
+    },
+    {
+      "dir": "in",
+      "amount": "19.5",
+      "address": "0xE674B10f92aD55C8e04F37b6A81d2C9530cf0D2f"
+    },
+    {
+      "dir": "in",
+      "amount": "14",
+      "address": "0x3Fa2c815Bd06E97f4a12D30C88b5461eF7209a2C"
+    }
+  ]
 }

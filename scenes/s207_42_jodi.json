@@ -1,0 +1,36 @@
+{
+  "sceneId": "s207_42_jodi",
+  "sceneLabel": "207 Sc42 — Jodi checks Clive's location",
+  "charId": "jodi",
+  "clockTime": "12:56 PM",
+  "battery": 4,
+  "signal": 3,
+  "wifi": 0,
+  "airplaneMode": false,
+  "startLocked": false,
+  "notifications": [],
+  "sceneType": "map",
+  "mapImage": "maps/temp_topo.jpg",
+  "mapZoom": 1,
+  "mapX": 50,
+  "mapY": 50,
+  "title": "Shared Location",
+  "subtitle": "Clive Tucker — 40.8781° N, 105.6298° W",
+  "target": {
+    "name": "Clive Tucker",
+    "x": 60,
+    "y": 44
+  },
+  "viewer": {
+    "x": 34,
+    "y": 29
+  },
+  "path": "auto",
+  "stats": {
+    "speed": "2.1 mph",
+    "distance": "3.8 mi",
+    "elevation": "5,940 ft"
+  },
+  "cardBattery": "71%",
+  "cardSignal": "Strong"
+}

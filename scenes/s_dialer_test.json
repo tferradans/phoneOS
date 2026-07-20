@@ -2,7 +2,6 @@
   "sceneId": "s_dialer_test",
   "sceneLabel": "DEV — Dialer test",
   "charId": "manny",
-  "theme": "dark",
   "clockTime": "9:15 PM",
   "battery": 4,
   "batteryCharging": false,

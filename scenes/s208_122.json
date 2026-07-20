@@ -1,0 +1,19 @@
+{
+  "sceneId": "s208_122",
+  "sceneLabel": "208 Sc122 — Ryan calls Billups (sheriff run)",
+  "charId": "ryan",
+  "clockTime": "9:26 PM",
+  "battery": 2,
+  "signal": 3,
+  "wifi": 0,
+  "airplaneMode": false,
+  "startLocked": false,
+  "notifications": [
+    "email"
+  ],
+  "sceneType": "call",
+  "sceneContact": "billups",
+  "callDir": "outgoing",
+  "callOutcome": "answered",
+  "callDuration": null
+}

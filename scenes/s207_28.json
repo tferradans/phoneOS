@@ -2,19 +2,59 @@
   "sceneId": "s207_28",
   "sceneLabel": "207 Sc28 — Nora's phone GPS hikers path",
   "charId": "nora",
-  "theme": "dark",
-  "clockTime": "11:20 AM",
-  "battery": 3,
-  "batteryCharging": false,
+  "clockTime": "11:24 AM",
+  "battery": 4,
   "signal": 2,
   "wifi": 0,
   "airplaneMode": false,
   "startLocked": false,
-  "notifications": ["gps"],
+  "notifications": [],
   "sceneType": "map",
-  "appLabel": "Maps",
-  "mapTitle": "Hikers' Trail",
-  "mapSubtitle": "Crystal Ridge Park — 2.3 mi from your location",
-  "mapPinX": 58,
-  "mapPinY": 38
+  "mapMode": "info",
+  "mapImage": "maps/temp_topo.jpg",
+  "mapZoom": 1,
+  "mapX": 50,
+  "mapY": 50,
+  "title": "Shared Route",
+  "subtitle": "Hiker group — Crystal Ridge NP",
+  "target": {
+    "name": "Hikers",
+    "initials": "HK",
+    "x": 62,
+    "y": 36
+  },
+  "viewer": null,
+  "path": [
+    [
+      30,
+      70
+    ],
+    [
+      36,
+      61
+    ],
+    [
+      44,
+      55
+    ],
+    [
+      50,
+      47
+    ],
+    [
+      56,
+      42
+    ],
+    [
+      62,
+      36
+    ]
+  ],
+  "stats": {
+    "speed": "1.8 mph",
+    "distance": "4.6 mi",
+    "elevation": "6,210 ft"
+  },
+  "cardBattery": "",
+  "cardSignal": ""
 }

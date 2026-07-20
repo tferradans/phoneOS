@@ -1,0 +1,17 @@
+{
+  "sceneId": "s208_124b",
+  "sceneLabel": "208 Sc124B — Jodi voicemail to Ryan (montage 124B/127A/131B)",
+  "charId": "jodi",
+  "clockTime": "7:52 AM",
+  "battery": 5,
+  "signal": 2,
+  "wifi": 0,
+  "airplaneMode": false,
+  "startLocked": false,
+  "notifications": [],
+  "sceneType": "call",
+  "sceneContact": "ryan",
+  "callDir": "outgoing",
+  "callOutcome": "voicemail",
+  "callDuration": null
+}

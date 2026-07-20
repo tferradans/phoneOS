@@ -1,19 +1,15 @@
 {
   "sceneId": "s207_53",
-  "sceneLabel": "207 Sc53 — Aaron burner outgoing call to Ryan",
+  "sceneLabel": "207 Sc53 — Aaron burner — call fails (no signal)",
   "charId": "aaron_burner",
-  "theme": "dark",
   "clockTime": "2:03 PM",
   "battery": 2,
-  "batteryCharging": false,
-  "signal": 1,
+  "signal": 0,
   "wifi": 0,
   "airplaneMode": false,
   "startLocked": false,
   "notifications": [],
-  "sceneType": "call",
-  "sceneContact": "Mobile",
-  "callDir": "outgoing",
-  "callOutcome": "answered",
-  "callDuration": null
+  "sceneType": "noservice",
+  "noServiceLabel": "Call Failed",
+  "noServiceSub": "Searching for signal…"
 }

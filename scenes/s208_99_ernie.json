@@ -2,20 +2,28 @@
   "sceneId": "s208_99_ernie",
   "sceneLabel": "208 Sc99 — Ernie shows tracker (blinking dot at NPS)",
   "charId": "ernie",
-  "theme": "dark",
-  "clockTime": "4:33 PM",
-  "battery": 2,
-  "batteryCharging": false,
+  "clockTime": "4:29 PM",
+  "battery": 3,
   "signal": 2,
   "wifi": 0,
   "airplaneMode": false,
   "startLocked": false,
   "notifications": [],
   "sceneType": "tracker",
-  "appLabel": "Track",
-  "trackerLabel": "Live GPS",
-  "trackerTarget": "Sheriff Vehicle",
-  "trackerStatus": "Stationary — NPS HQ",
-  "mapPinX": 50,
-  "mapPinY": 50
+  "mapImage": "maps/temp_aerial.jpg",
+  "mapZoom": 1.5,
+  "mapX": 48,
+  "mapY": 38,
+  "target": {
+    "x": 48,
+    "y": 36,
+    "label": "SHERIFF",
+    "id": "UNIT 1 — NPS HQ"
+  },
+  "viewer": null,
+  "telemetry": {
+    "distance": "0.4 MILES",
+    "speed": "0.0 MPH",
+    "coords": "40.6608°, 105.8492°"
+  }
 }

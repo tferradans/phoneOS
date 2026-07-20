@@ -1,0 +1,19 @@
+{
+  "sceneId": "s208_117",
+  "sceneLabel": "208 Sc117 — Jodi incoming call from Dad",
+  "charId": "jodi",
+  "clockTime": "8:12 PM",
+  "battery": 2,
+  "signal": 3,
+  "wifi": 2,
+  "airplaneMode": false,
+  "startLocked": false,
+  "notifications": [
+    "calendar"
+  ],
+  "sceneType": "call",
+  "sceneContact": "bill",
+  "callDir": "incoming",
+  "callOutcome": null,
+  "callDuration": null
+}

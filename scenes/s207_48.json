@@ -1,0 +1,39 @@
+{
+  "sceneId": "s207_48",
+  "sceneLabel": "207 Sc48 — Jodi gets trail-cam photo from Tyson",
+  "charId": "jodi",
+  "clockTime": "1:37 PM",
+  "battery": 4,
+  "signal": 2,
+  "wifi": 0,
+  "airplaneMode": false,
+  "startLocked": true,
+  "lockType": "swipe",
+  "notifications": [],
+  "lockNotifications": [
+    {
+      "app": "New Message",
+      "icon": "msgBubble",
+      "title": "Tyson Bernard",
+      "text": "Trail cam hit — photo…"
+    }
+  ],
+  "sceneType": "text",
+  "sceneContact": "tyson",
+  "priorMessages": [
+    {
+      "from": "them",
+      "text": "Trail cam just pinged. Look."
+    },
+    {
+      "from": "them",
+      "image": "messages/trailcam_207_48.jpg"
+    },
+    {
+      "from": "them",
+      "text": "Cam 12 — 48.7621° N, 118.2043° W"
+    }
+  ],
+  "sceneMessage": null,
+  "sceneReply": null
+}

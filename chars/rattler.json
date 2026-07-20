@@ -1,0 +1,17 @@
+{
+  "charId": "rattler",
+  "charName": "Rattler",
+  "clockFormat": "12h",
+  "accentColor": "#7A5F5F",
+  "wallpaperHome": null,
+  "wallpaperLock": null,
+  "lockType": "swipe",
+  "lockPin": null,
+  "contacts": {
+    "ernie": {
+      "name": "Ernie",
+      "number": "555-0231",
+      "avatar": null
+    }
+  }
+}

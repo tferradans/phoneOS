@@ -2,18 +2,19 @@
   "sceneId": "s208_37",
   "sceneLabel": "208 Sc37 — Ernie opens Jodi's contact (about to call)",
   "charId": "ernie",
-  "theme": "dark",
-  "clockTime": "12:14 PM",
-  "battery": 2,
-  "batteryCharging": false,
-  "signal": 2,
+  "clockTime": "1:58 PM",
+  "battery": 3,
+  "signal": 3,
   "wifi": 0,
   "airplaneMode": false,
   "startLocked": false,
   "notifications": [],
-  "sceneType": "call",
+  "sceneType": "contacts",
+  "contactsView": "card",
   "sceneContact": "jodi",
-  "callDir": "outgoing",
-  "callOutcome": "answered",
-  "callDuration": null
+  "cardActivity": {
+    "label": "Outgoing call",
+    "sub": "Main",
+    "when": "2 hrs ago"
+  }
 }

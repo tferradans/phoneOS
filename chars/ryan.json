@@ -12,8 +12,25 @@
   "biometricStyle": null,
   "carrierName": "AT&T",
   "contacts": {
-    "jodi":  { "name": "Jodi Larsen",   "number": "555-0147", "avatar": null },
-    "tyson": { "name": "Tyson Bernard", "number": "555-0209", "avatar": null },
-    "a_s":   { "name": "A.S",           "number": "555-0318", "avatar": null }
+    "jodi": {
+      "name": "Jodi Larsen",
+      "number": "555-0147",
+      "avatar": null
+    },
+    "tyson": {
+      "name": "Tyson Bernard",
+      "number": "555-0209",
+      "avatar": null
+    },
+    "a_s": {
+      "name": "A.S",
+      "number": "555-0318",
+      "avatar": null
+    },
+    "billups": {
+      "name": "Billups",
+      "number": "555-0290",
+      "avatar": null
+    }
   }
 }

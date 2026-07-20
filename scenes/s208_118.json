@@ -1,0 +1,17 @@
+{
+  "sceneId": "s208_118",
+  "sceneLabel": "208 Sc118 — Bill active call with Jodi (intercut)",
+  "charId": "bill",
+  "clockTime": "8:13 PM",
+  "battery": 3,
+  "signal": 2,
+  "wifi": 2,
+  "airplaneMode": false,
+  "startLocked": false,
+  "notifications": [],
+  "sceneType": "call",
+  "sceneContact": "jodi",
+  "callDir": "outgoing",
+  "callOutcome": "answered",
+  "callDuration": null
+}

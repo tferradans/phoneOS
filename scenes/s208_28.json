@@ -2,7 +2,6 @@
   "sceneId": "s208_28",
   "sceneLabel": "208 Sc28 — Jodi secretly texts Ernie",
   "charId": "jodi",
-  "theme": "dark",
   "clockTime": "11:10 AM",
   "battery": 3,
   "batteryCharging": false,
@@ -14,7 +13,10 @@
   "sceneType": "text",
   "sceneContact": "ernie",
   "priorMessages": [
-    { "from": "me", "text": "starting to get worried. It's not like you to not show up...", "time": "9:28 AM" }
+    {
+      "from": "me",
+      "text": "starting to get worried. It's not like you to not show up..."
+    }
   ],
   "sceneMessage": "I don't know what's going on. But if you're really involved in all this, come clean. Please.",
   "sceneReply": null
