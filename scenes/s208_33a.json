@@ -12,7 +12,12 @@
   "notifications": [],
   "sceneType": "text",
   "sceneContact": "francine",
-  "priorMessages": [],
+  "priorMessages": [
+    {
+      "from": "them",
+      "text": "Had a really nice time. Thanks, Bill."
+    }
+  ],
   "sceneMessage": "Can we meet?",
   "sceneReply": null
 }

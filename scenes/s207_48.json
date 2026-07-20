@@ -15,7 +15,7 @@
       "app": "New Message",
       "icon": "msgBubble",
       "title": "Tyson Bernard",
-      "text": "Trail cam hit — photo…"
+      "text": "Trail cam hit — *Image*…"
     }
   ],
   "sceneType": "text",
@@ -31,7 +31,8 @@
     },
     {
       "from": "them",
-      "text": "Cam 12 — 48.7621° N, 118.2043° W"
+      "text": "Cam 12 — 48.7621° N, 118.2043° W",
+      "afterImage": true
     }
   ],
   "sceneMessage": null,

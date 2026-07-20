@@ -12,7 +12,12 @@
   "notifications": [],
   "sceneType": "text",
   "sceneContact": "francine",
-  "priorMessages": [],
+  "priorMessages": [
+    {
+      "from": "them",
+      "text": "Had a really nice time. Thanks, Bill."
+    }
+  ],
   "deleteDraft": true,
   "draftMessage": "I still have your sweater. Should I bring it by?",
   "sceneMessage": null,

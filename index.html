@@ -944,12 +944,19 @@
     align-items: center; height: 100%;
   }
   .call-ended-top {
-    padding: 18% 28px 0;
+    /* padding-top matches .call-con-info exactly, so the name holds its
+       position on the active-call → ended cut (no drift on camera) */
+    padding: 28% 28px 0;
     display: flex; flex-direction: column;
-    align-items: center; gap: 18px; width: 100%;
+    align-items: center; width: 100%;
   }
+  .call-ended-name-wrap { position: relative; }
   .call-ended-header {
     display: flex; align-items: center; gap: 8px;
+    /* floats above the name without pushing it down */
+    position: absolute; bottom: 100%; left: 50%;
+    transform: translateX(-50%);
+    margin-bottom: 16px; white-space: nowrap;
   }
   .call-ended-label {
     font-size: var(--call-font-label); font-weight: 500; color: var(--call-end);
@@ -2105,7 +2112,7 @@
     --nosig-font-title: calc(34px * var(--font-scale));
     --nosig-font-sub:   calc(16px * var(--font-scale));
 
-    --nosig-top:        19vh;                    /* cluster sits in the top third (height-relative) */
+    --nosig-top:        39vh;                    /* cluster sits near screen center (height-relative) */
 
     background: var(--nosig-bg);
     z-index: 8;
@@ -2992,6 +2999,12 @@ function esc(s) {
   return d.innerHTML;
 }
 
+/* Escape + *italics* — for authored strings where attachment
+   placeholders render emphasized ("Trail cam hit — *Image*") */
+function escEm(s) {
+  return esc(s).replace(/\*([^*]+)\*/g, '<em>$1</em>');
+}
+
 /* ── Real flashlight (Android Chrome; needs one camera-permission
    grant per device). iOS has no web torch API — the button still
    toggles visually there. ── */
@@ -3067,7 +3080,7 @@ MODULES.lock = {
           <span class="lock-notif-app">${esc(n.app || 'New Message')}</span>
           ${n.title ? `<div class="lock-notif-title">${esc(n.title)}</div>` : ''}
         </div>
-        ${n.text ? `<div class="lock-notif-body">${esc(n.text)}</div>` : ''}
+        ${n.text ? `<div class="lock-notif-body">${escEm(n.text)}</div>` : ''}
       </button>`).join('');
 
     el.innerHTML = `
@@ -4123,6 +4136,7 @@ MODULES.tracker = {
 MODULES.map = {
   defaults: {
     mapMode: 'tracker',      // "tracker" = full card; "info" = just the map/route
+    stopButton: true,        // false = view-only tracking, no STOP control
     mapImage: 'maps/temp_topo.jpg',
     title: 'Shared Location',
     subtitle: '',
@@ -4195,7 +4209,7 @@ MODULES.map = {
         <div class="map-h">
           <div class="map-avatar">${avatarInner}</div>
           <div><div class="nm">${esc(tg.name || '')}</div><div class="st">CONNECTED</div></div>
-          <button class="map-stop-btn map-tglx">STOP</button>
+          ${cfg.stopButton !== false ? '<button class="map-stop-btn map-tglx">STOP</button>' : ''}
         </div>
         ${(cfg.cardBattery || cfg.cardSignal) ? `
         <div class="map-meta">
@@ -4578,7 +4592,9 @@ function resolveCallName(cfg) {
   const contact = cfg.contacts && cfg.sceneContact
     ? cfg.contacts[cfg.sceneContact]
     : null;
-  if (!contact) return cfg.sceneContact || 'Unknown';
+  // Unsaved number: outgoing calls read "Mobile" (you dialed a number),
+  // incoming calls read "Unknown" (the phone can't name the caller)
+  if (!contact) return cfg.sceneContact || (cfg.callDir === 'incoming' ? 'Unknown' : 'Mobile');
   // "Dad" (or any contact.name with no spaces) is already a display alias — keep it as-is
   // For regular names: use first name only, unless cfg.showFullName is true
   if (cfg.showFullName) return contact.name;
@@ -4755,13 +4771,15 @@ function buildCallEndedScreen(el, cfg, name) {
   el.innerHTML = `
     <div class="call-ended-wrap">
       <div class="call-ended-top">
-        <div class="call-ended-header">
-          <svg viewBox="0 0 24 24" style="width:20px;height:20px;fill:var(--negative);flex-shrink:0">
-            <path d="M20.01 15.38c-1.23 0-2.42-.2-3.53-.56a.977.977 0 0 0-1.01.24l-1.57 1.97c-2.83-1.35-5.48-3.9-6.89-6.83l1.95-1.66c.27-.28.35-.67.24-1.02-.37-1.12-.56-2.32-.56-3.53 0-.54-.45-.99-.99-.99H4.19C3.65 3 3 3.24 3 3.99 3 13.28 10.73 21 20.01 21c.71 0 .99-.63.99-1.18v-3.45c0-.54-.45-.99-.99-.99z" transform="rotate(135 12 12)"/>
-          </svg>
-          <span class="call-ended-label">Call Ended</span>
+        <div class="call-ended-name-wrap">
+          <div class="call-ended-header">
+            <svg viewBox="0 0 24 24" style="width:20px;height:20px;fill:var(--negative);flex-shrink:0">
+              <path d="M20.01 15.38c-1.23 0-2.42-.2-3.53-.56a.977.977 0 0 0-1.01.24l-1.57 1.97c-2.83-1.35-5.48-3.9-6.89-6.83l1.95-1.66c.27-.28.35-.67.24-1.02-.37-1.12-.56-2.32-.56-3.53 0-.54-.45-.99-.99-.99H4.19C3.65 3 3 3.24 3 3.99 3 13.28 10.73 21 20.01 21c.71 0 .99-.63.99-1.18v-3.45c0-.54-.45-.99-.99-.99z" transform="rotate(135 12 12)"/>
+            </svg>
+            <span class="call-ended-label">Call Ended</span>
+          </div>
+          <div class="call-ended-name">${name}</div>
         </div>
-        <div class="call-ended-name">${name}</div>
       </div>
       <div style="flex:1"></div>
       <div class="call-ended-actions">
@@ -5056,7 +5074,12 @@ function buildTextScreen(cfg, ctx) {
     ? cfg.contacts[cfg.sceneContact]
     : null;
 
-  const name = contact ? contact.name : (cfg.sceneContact || 'Unknown Number');
+  // Unsaved thread: if this phone has written into it (sent or drafting),
+  // the header reads "Mobile" — a number they texted; a thread that's
+  // purely received reads "Unknown" (mirrors the call-screen defaults)
+  const hasOutgoing = (cfg.priorMessages || []).some(m => m && m.from === 'me')
+    || !!cfg.sceneMessage || !!cfg.draftMessage;
+  const name = contact ? contact.name : (cfg.sceneContact || (hasOutgoing ? 'Mobile' : 'Unknown'));
   document.getElementById('text-contact-name').textContent = name;
 
   // Back arrow → scene menu. ctx.listen is auto-removed at teardown, so
@@ -5071,20 +5094,44 @@ function buildTextScreen(cfg, ctx) {
 
   // Timestamps on prior messages are retired — history renders as plain
   // bubbles; only the newly sent message gets a "Today" separator.
+  // Messages flagged "afterImage" are held back: they only land after
+  // the image in the thread has been opened and closed (the trail-cam
+  // beat — photo first, coordinates once they've looked).
+  const heldMessages = (cfg.priorMessages || []).filter(m => m && m.afterImage);
   if (cfg.priorMessages && Array.isArray(cfg.priorMessages)) {
     cfg.priorMessages.forEach(msg => {
+      if (msg.afterImage) return;
       addBubble(thread, msg.text, msg.from === 'me' ? 'me' : 'them', null, msg.image);
     });
     thread.scrollTop = thread.scrollHeight;
   }
 
+  // Back from the image viewer: the held messages arrive a beat later,
+  // as if the sender waited for them to look before following up
+  if (cfg._imageViewed && heldMessages.length) {
+    sceneTimeout(() => {
+      heldMessages.forEach(msg => {
+        addBubble(thread, msg.text, msg.from === 'me' ? 'me' : 'them', null, msg.image);
+      });
+      thread.scrollTop = thread.scrollHeight;
+      armImageTaps();
+    }, 1400);
+  }
+
   // Tapping an image opens the viewer module; its back button returns
-  // here by relaunching this scene (the standard module-to-module hop)
-  thread.querySelectorAll('.bubble-img').forEach(imgEl => {
-    ctx.listen(imgEl, 'click', () => {
-      loadModule('imgviewer', Object.assign({}, cfg, { image: imgEl.dataset.image, _returnCfg: cfg }));
+  // here by relaunching this scene (the standard module-to-module hop).
+  // The relaunch carries _imageViewed so held-back messages can arrive.
+  function armImageTaps() {
+    thread.querySelectorAll('.bubble-img').forEach(imgEl => {
+      if (imgEl.dataset.armed) return;   // re-arm pass only wires new arrivals
+      imgEl.dataset.armed = '1';
+      ctx.listen(imgEl, 'click', () => {
+        const returnCfg = Object.assign({}, cfg, { _imageViewed: true });
+        loadModule('imgviewer', Object.assign({}, cfg, { image: imgEl.dataset.image, _returnCfg: returnCfg }));
+      });
     });
-  });
+  }
+  armImageTaps();
 
   // Reset element STATE from any previous scene (listeners are the
   // lifecycle's job; state is ours)

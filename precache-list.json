@@ -1,5 +1,5 @@
 {
-  "version": "2026-07-19 01:39:06",
+  "version": "2026-07-20 11:29:53",
   "assets": [
     "./",
     "./index.html",
@@ -64,7 +64,6 @@
     "./chars/nora.json",
     "./chars/rattler.json",
     "./chars/ryan.json",
-    "./chars/steel_reaper.json",
     "./chars/tyson.json",
     "./chars/tyson_drone.json",
     "./chars/vfx.json",

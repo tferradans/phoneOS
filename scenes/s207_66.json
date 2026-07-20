@@ -10,6 +10,7 @@
   "startLocked": false,
   "notifications": [],
   "sceneType": "map",
+  "stopButton": false,
   "mapImage": "maps/temp_topo.jpg",
   "mapZoom": 1,
   "mapX": 50,

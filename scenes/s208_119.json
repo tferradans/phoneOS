@@ -15,7 +15,7 @@
       "app": "New Message",
       "icon": "msgBubble",
       "title": "Ernie Estevez",
-      "text": "Come outside."
+      "text": "Hey, meet me just outside."
     }
   ],
   "sceneType": "text",
@@ -31,7 +31,7 @@
     },
     {
       "from": "them",
-      "text": "Come outside."
+      "text": "Hey, meet me just outside."
     }
   ],
   "sceneMessage": null,

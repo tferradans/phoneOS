@@ -20,11 +20,14 @@
   "target": {
     "name": "Pickup",
     "initials": "P",
-    "x": 55,
-    "y": 45
+    "x": 59,
+    "y": 41
   },
-  "viewer": null,
-  "path": null,
+  "viewer": {
+    "x": 46,
+    "y": 54
+  },
+  "path": "auto",
   "stats": {},
   "cardBattery": "",
   "cardSignal": ""

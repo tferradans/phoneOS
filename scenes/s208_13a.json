@@ -12,7 +12,16 @@
   "notifications": [],
   "sceneType": "text",
   "sceneContact": "ernie",
-  "priorMessages": [],
+  "priorMessages": [
+    {
+      "from": "me",
+      "text": "Hey, you coming in?"
+    },
+    {
+      "from": "me",
+      "text": "Ernie, call me back"
+    }
+  ],
   "sceneMessage": "starting to get worried. It's not like you to not show up...",
   "sceneReply": null,
   "sceneReplyDelay": null
