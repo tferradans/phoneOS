@@ -10,15 +10,15 @@
   "startLocked": false,
   "notifications": [],
   "sceneType": "tracker",
-  "mapImage": "maps/temp_aerial.jpg",
-  "mapZoom": 1.3,
-  "mapX": 48,
-  "mapY": 40,
+  "mapImage": "maps/208_sc81.jpg",
+  "mapZoom": 1.60,
+  "mapX": 43.7,
+  "mapY": 54.4,
   "target": {
-    "x": 48,
-    "y": 36,
-    "label": "SHERIFF",
-    "id": "UNIT 1 — NPS HQ"
+    "x": 48.2,
+    "y": 34,
+    "label": "MILLER",
+    "id": "E4DA2EF3"
   },
   "viewer": null,
   "telemetry": {

@@ -1,10 +1,12 @@
 {
-  "version": "2026-07-21 09:55:39",
+  "version": "2026-07-21 13:30:30",
   "assets": [
     "./",
     "./index.html",
     "./manifest.json",
     "./manifest-index.json",
+    "./icons/icon-192.png",
+    "./icons/icon-512.png",
     "./img/bg/bill.png",
     "./img/bg/clive.png",
     "./img/bg/ernie.png",
@@ -40,6 +42,8 @@
     "./img/icons/wifi-1.svg",
     "./img/icons/wifi-2.svg",
     "./img/icons/wifi-3.svg",
+    "./img/maps/207sc103.jpg",
+    "./img/maps/208_sc81.jpg",
     "./img/maps/temp_aerial.jpg",
     "./img/maps/temp_topo.jpg",
     "./img/messages/trailcam_207_48.jpg",
@@ -51,8 +55,6 @@
     "./font/sf-ui-display-semibold-58646eddcae92.otf",
     "./font/sf-ui-display-thin-58646e9b26e8b.otf",
     "./font/sf-ui-display-ultralight-58646b19bf205.otf",
-    "./icons/icon-192.png",
-    "./icons/icon-512.png",
     "./chars/aaron_burner.json",
     "./chars/bill.json",
     "./chars/clive.json",
@@ -124,7 +126,6 @@
     "./scenes/svfx_intense_grey.json",
     "./scenes/svfx_no_reflection.json",
     "./docs/207_bkb_manifest.html",
-    "./docs/207_bkb_SOURCES.md",
     "./docs/207_bkb_tripsheet.html",
     "./docs/207_bkb_waiver.html"
   ]

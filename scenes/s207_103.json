@@ -10,20 +10,22 @@
   "startLocked": false,
   "notifications": [],
   "sceneType": "tracker",
-  "mapImage": "maps/temp_aerial.jpg",
-  "mapZoom": 1,
-  "mapX": 50,
-  "mapY": 50,
+  "mapImage": "maps/207sc103.jpg",
+  "mapZoom": 1.30,
+  "mapX": 44.5,
+  "mapY": 43.9,
   "target": {
-    "x": 52,
-    "y": 34,
+    "x": 51.2,
+    "y": 47.6,
     "label": "MILLER",
-    "id": "ID: 121901489NPS"
+    "id": "E4DA2EF3"
   },
   "viewer": null,
+  "driveSec": 20,
+  "path": [[51.2, 47.6], [51.7, 54.2], [44.7, 51.6], [32.1, 47.3]],
   "telemetry": {
-    "distance": "3.1 MILES",
-    "speed": "0.0 MPH",
+    "distance": "0.1 MILES",
+    "speed": "20 MPH",
     "coords": "40.6601°, 105.8491°"
   }
 }

@@ -4174,7 +4174,7 @@ MODULES.tracker = {
           ${Array.isArray(tel) ? tel.map(row =>
             `<tr><td>${esc(String(row.label || '').toUpperCase())}:</td><td${/location/i.test(row.label || '') ? ' id="trk-coords"' : ''}>${esc(row.value || '')}</td></tr>`
           ).join('') : `
-          ${tel.distance ? `<tr><td>DISTANCE:</td><td>${esc(tel.distance)}</td></tr>` : ''}
+          ${tel.distance ? `<tr><td>DISTANCE:</td><td id="trk-dist">${esc(tel.distance)}</td></tr>` : ''}
           ${tel.speed    ? `<tr><td>SPEED:</td><td>${esc(tel.speed)}</td></tr>` : ''}
           ${tel.coords   ? `<tr><td>LOCATION:</td><td id="trk-coords">${esc(tel.coords)}</td></tr>` : ''}`}
         </table>
@@ -4209,6 +4209,49 @@ MODULES.tracker = {
         mk.style.left = ex + '%';
         mk.style.top  = ey + '%';
       }, 600);
+    }
+
+    // ── Target drive: the marker rides along cfg.path (the road, drawn as
+    //    [x,y] % points), tag in tow. Skipped in RIG so the path handles stay
+    //    draggable. Time is split across segments by length for even pace.
+    if (Array.isArray(cfg.path) && cfg.path.length >= 2 && !RIG_MODE) {
+      const mk = el.querySelector('.mapmk[data-rig="target"]');
+      const pts = cfg.path.map(p => [+p[0], +p[1]]);
+      const seg = []; let total = 0;
+      for (let i = 1; i < pts.length; i++) {
+        const d = Math.hypot(pts[i][0] - pts[i-1][0], pts[i][1] - pts[i-1][1]);
+        seg.push(d); total += d;
+      }
+      const driveSec = +cfg.driveSec > 0 ? +cfg.driveSec : 20;
+      mk.style.left = pts[0][0] + '%';
+      mk.style.top  = pts[0][1] + '%';
+      let acc = 600;   // brief hold, then it pulls away
+      for (let i = 1; i < pts.length; i++) {
+        const legSec = total > 0 ? driveSec * seg[i-1] / total : driveSec / (pts.length - 1);
+        sceneTimeout(() => {
+          mk.style.transition = `left ${legSec}s linear, top ${legSec}s linear`;
+          mk.style.left = pts[i][0] + '%';
+          mk.style.top  = pts[i][1] + '%';
+        }, acc);
+        acc += legSec * 1000;
+      }
+    }
+
+    // ── Distance climbs while a path-driven target moves. Gated on cfg.path so
+    //    stationary and other moving scenes keep their static distance.
+    //    (Show convention: speed in MPH, distance in MILES.)
+    const distEl = el.querySelector('#trk-dist');
+    if (distEl && speedVal > 0 && Array.isArray(cfg.path)) {
+      const dm = String(tel.distance).match(/-?\d+(?:\.\d+)?/);
+      if (dm) {
+        let dist = parseFloat(dm[0]);
+        const unit = String(tel.distance).replace(/[-\d.\s]+/g, ' ').trim() || 'MILES';
+        const perSec = speedVal / 3600;
+        sceneInterval(() => {
+          dist += perSec;
+          distEl.textContent = `${dist.toFixed(1)} ${unit}`;
+        }, 1000);
+      }
     }
 
     showScreen('screen-tracker');
