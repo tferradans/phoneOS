@@ -1843,7 +1843,11 @@
     --trk-disc:          rgba(12,12,16,0.62);      /* crosshair backing disc */
     --trk-grid-opacity:  0.5;
     --trk-font-cond:     'Arial Narrow', 'SFUI', sans-serif;
-    --trk-font-tel:      calc(12.5px * var(--font-scale));
+    /* Chrome type is authored for the LIVE 432px frame, not the 330px
+       mock the module was first ported from — hence bigger than the
+       mock's literal px. Telemetry carries a value/label hierarchy. */
+    --trk-font-tel:      calc(17px * var(--font-scale));    /* telemetry value */
+    --trk-font-tel-lbl:  calc(13px * var(--font-scale));    /* telemetry label */
     --trk-font-tag:      calc(14px * var(--font-scale));
 
     background: var(--trk-bg);
@@ -1860,25 +1864,25 @@
     background-size:44px 44px;
   }
   .trk-top {
-    position:absolute; top:8px; left:12px; right:12px; z-index:5; height:40px;
-    background:var(--trk-chip); border-radius:8px;
-    display:flex; align-items:center; justify-content:space-between; padding:0 4px;
+    position:absolute; top:10px; left:14px; right:14px; z-index:5; height:52px;
+    background:var(--trk-chip); border-radius:10px;
+    display:flex; align-items:center; justify-content:space-between; padding:0 6px;
   }
   .trk-btn {
-    width:34px; height:34px; border-radius:6px; border:none; background:none;
+    width:44px; height:44px; border-radius:8px; border:none; background:none;
     display:flex; align-items:center; justify-content:center;
     cursor:pointer; -webkit-tap-highlight-color:transparent;
   }
-  .trk-btn svg { width:17px; height:17px; fill:var(--trk-ink); }
+  .trk-btn svg { width:22px; height:22px; fill:var(--trk-ink); }
   .trk-btn.on { background:var(--trk-chip-on); }
   .trk-btn.on svg { fill:#111; }
-  .trk-rail { position:absolute; left:12px; top:64px; display:flex; flex-direction:column; gap:7px; z-index:5; }
-  .trk-rail .trk-btn { width:32px; height:32px; border-radius:7px; background:var(--trk-chip); }
+  .trk-rail { position:absolute; left:14px; top:84px; display:flex; flex-direction:column; gap:9px; z-index:5; }
+  .trk-rail .trk-btn { width:42px; height:42px; border-radius:9px; background:var(--trk-chip); }
   .trk-rail .trk-btn.on { background:var(--trk-chip-on); }
   .trk-zoom {
-    position:absolute; right:12px; bottom:118px; width:34px; border-radius:8px;
+    position:absolute; right:14px; bottom:150px; width:44px; border-radius:10px;
     background:var(--trk-chip); color:var(--trk-ink); text-align:center; z-index:5;
-    font-size:22px; font-weight:500; line-height:1.55; user-select:none;
+    font-size:28px; font-weight:500; line-height:1.55; user-select:none;
   }
   .trk-zoom div { cursor:pointer; -webkit-tap-highlight-color:transparent; }
   .trk-zoom div:active { opacity:0.5; }
@@ -1901,15 +1905,16 @@
     --pulse-c: rgba(238,75,56,.7);
   }
   .trk-tel {
-    position:absolute; left:14px; right:14px; bottom:24px; z-index:5;
-    background:var(--trk-chip); border-radius:9px; padding:10px 16px 11px;
-    display:flex; gap:12px; align-items:center; justify-content:center;
+    position:absolute; left:16px; right:16px; bottom:28px; z-index:5;
+    background:var(--trk-chip); border-radius:11px; padding:13px 20px 14px;
+    display:flex; gap:14px; align-items:center; justify-content:center;
   }
-  .trk-tel .arrow svg { width:18px; height:18px; fill:var(--trk-ink); }
+  .trk-tel .arrow svg { width:24px; height:24px; fill:var(--trk-ink); }
   .trk-tel table { border-collapse:collapse; }
   .trk-tel td { font-family:var(--trk-font-cond); font-size:var(--trk-font-tel);
-                letter-spacing:0.07em; padding:1px 0; white-space:nowrap; }
-  .trk-tel td:first-child { color:var(--trk-ink-soft); padding-right:12px; }
+                letter-spacing:0.07em; padding:2px 0; white-space:nowrap; }
+  .trk-tel td:first-child { color:var(--trk-ink-soft); padding-right:14px;
+                            font-size:var(--trk-font-tel-lbl); }
 
   /* ============================================================
      MAP (consumer)

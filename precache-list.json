@@ -1,5 +1,5 @@
 {
-  "version": "2026-07-21 13:30:30",
+  "version": "2026-07-21 14:23:42",
   "assets": [
     "./",
     "./index.html",
@@ -44,6 +44,7 @@
     "./img/icons/wifi-3.svg",
     "./img/maps/207sc103.jpg",
     "./img/maps/208_sc81.jpg",
+    "./img/maps/bigmap.jpg",
     "./img/maps/temp_aerial.jpg",
     "./img/maps/temp_topo.jpg",
     "./img/messages/trailcam_207_48.jpg",
@@ -64,6 +65,7 @@
     "./chars/meeks.json",
     "./chars/meeks_tablet.json",
     "./chars/nora.json",
+    "./chars/nora_tablet.json",
     "./chars/rattler.json",
     "./chars/ryan.json",
     "./chars/tyson.json",
@@ -79,6 +81,7 @@
     "./scenes/s207_28.json",
     "./scenes/s207_32.json",
     "./scenes/s207_34.json",
+    "./scenes/s207_40.json",
     "./scenes/s207_42_jodi.json",
     "./scenes/s207_42_ryan.json",
     "./scenes/s207_48.json",

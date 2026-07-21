@@ -1,0 +1,41 @@
+{
+  "sceneId": "s207_40",
+  "sceneLabel": "207 Sc40 — Nora reviews hiker search map (tablet)",
+  "charId": "nora_tablet",
+  "clockTime": "12:47 PM",
+  "battery": 4,
+  "signal": 2,
+  "wifi": 0,
+  "airplaneMode": false,
+  "startLocked": false,
+  "notifications": [],
+  "sceneType": "map",
+  "mapMode": "info",
+  "mapImage": "maps/bigmap.jpg",
+  "mapZoom": 1,
+  "mapX": 50,
+  "mapY": 50,
+  "title": "Shared Route",
+  "subtitle": "Hiker group — Crystal Ridge NP",
+  "target": {
+    "name": "Hikers",
+    "initials": "HK",
+    "x": 42,
+    "y": 29.8
+  },
+  "viewer": null,
+  "path": [
+    [38.5, 72.1],
+    [36.1, 59.8],
+    [36, 47],
+    [38.5, 40.7],
+    [38.8, 31.8]
+  ],
+  "stats": {
+    "speed": "1.8 mph",
+    "distance": "4.6 mi",
+    "elevation": "6,210 ft"
+  },
+  "cardBattery": "",
+  "cardSignal": ""
+}
