@@ -404,6 +404,15 @@
     color: var(--sb-ink, var(--icon-color));
     flex-shrink: 0;
   }
+  /* On iOS home-screen installs the REAL status bar always draws over
+     the app — a fake one under it would double the clock. There the
+     fake bar collapses to a bare tone strip (each app's --sb-bg still
+     fills the notch area behind the system clock) and its content is
+     hidden. html.ios-real-bar is set at boot. */
+  html.ios-real-bar { --status-height: var(--safe-top); }
+  html.ios-real-bar #status-bar { height: var(--safe-top); }
+  html.ios-real-bar #status-bar > * { display: none; }
+
   #phone-chrome[data-screen="screen-text"] {
     --sb-bg: #f9f9f9;            /* Messages bar tone */
     --sb-ink: #000;
@@ -1174,6 +1183,7 @@
     font-size: var(--msg-font-bubble);
     line-height: 1.45;
     word-break: break-word;
+    white-space: pre-line;
   }
   .bubble.them {
     background: var(--msg-bubble-them);
@@ -1298,8 +1308,8 @@
     --wal-accent:     var(--accent);       /* graph + send button */
     --wal-up:         var(--positive);     /* transfer complete */
     --wal-line:       rgba(255,255,255,0.08);
-    --wal-font-coin:  calc(12px * var(--font-scale));
-    --wal-font-bal:   calc(44px * var(--font-scale));
+    --wal-font-coin:  calc(20px * var(--font-scale));
+    --wal-font-bal:   calc(72px * var(--font-scale));
     --wal-font-val:   calc(14px * var(--font-scale));
     --wal-font-send:  calc(17px * var(--font-scale));
 
@@ -1321,12 +1331,12 @@
   .wal-hbtn svg { width: 20px; height: 20px; fill: currentColor; }
   .wal-balance { text-align: center; padding-top: 6px; }
   .wal-coin {
-    font-size: var(--wal-font-coin); font-weight: 700;
+    font-size: var(--wal-font-coin); font-weight: 900;
     letter-spacing: 0.14em; text-transform: uppercase; color: var(--wal-ink-faint);
   }
-  .wal-amount { font-size: var(--wal-font-bal); font-weight: 200; letter-spacing: -0.02em; margin-top: 4px; }
+  .wal-amount { font-size: var(--wal-font-bal); font-weight: 400; letter-spacing: -0.02em; margin-top: 4px; }
   .wal-rate { font-size: calc(13px * var(--font-scale)); color: var(--wal-ink-faint); margin-top: 6px; }
-  .wal-usd  { font-size: calc(16.5px * var(--font-scale)); font-weight: 400; color: var(--wal-ink-soft); margin-top: 3px; }
+  .wal-usd  { font-size: calc(30px * var(--font-scale)); font-weight: 600; color: var(--wal-ink-soft); margin-top: 3px; }
   .wal-graph { margin-top: 4px; }
   .wal-graph svg { display: block; width: 100%; height: 110px; }
   .wal-ranges { display: flex; justify-content: center; gap: 6px; margin-top: 8px; }
@@ -2505,7 +2515,8 @@
         <svg viewBox="0 0 24 24"><path d="M12 15.2A3.2 3.2 0 1 0 12 8.8a3.2 3.2 0 0 0 0 6.4zm0 0"/><path d="M9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/></svg>
       </button>
       <div class="text-input-wrap">
-        <textarea class="text-input-field" id="text-input" placeholder="SMS message" rows="1"></textarea>
+        <textarea class="text-input-field" id="text-input" placeholder="SMS message" rows="1"
+                  autocomplete="off" autocorrect="off" spellcheck="false"></textarea>
       </div>
       <button class="text-send-btn" id="btn-send">
         <svg viewBox="0 0 24 24"><path d="M4 12l1.41 1.41L11 7.83V20h2V7.83l5.58 5.59L20 12l-8-8-8 8z"/></svg>
@@ -5915,6 +5926,21 @@ if (window.visualViewport) {
 }
 
 /* ============================================================
+   iOS INSTALLS — the system status bar can't be hidden and always
+   draws over the app, so the fake bar would double the clock. Flag
+   the document; CSS collapses the fake bar to a tone strip. Only
+   for home-screen launches — in a browser tab the system bar sits
+   on the browser chrome, not the app, and the fake bar stays.
+============================================================ */
+(function () {
+  const iosDevice = /iPhone|iPad|iPod/.test(navigator.userAgent) ||
+                    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  const installed = navigator.standalone === true ||
+                    matchMedia('(display-mode: standalone), (display-mode: fullscreen)').matches;
+  if (iosDevice && installed) document.documentElement.classList.add('ios-real-bar');
+})();
+
+/* ============================================================
    FULLSCREEN RESCUE — claim the camera-cutout row on Android
    Even in fullscreen display mode, Android letterboxes the app
    window below the cutout (window shorter than the screen, inset
@@ -5927,6 +5953,7 @@ if (window.visualViewport) {
 (function () {
   if (!document.documentElement.requestFullscreen) return;
   let pending = false;
+  let lbH = 0;   // window height while letterboxed — the estimation baseline
   function typing() {
     const a = document.activeElement;
     return a && (a.tagName === 'INPUT' || a.tagName === 'TEXTAREA' || a.isContentEditable);
@@ -5941,9 +5968,8 @@ if (window.visualViewport) {
     // don't mistake it for letterboxing (and never yank the keyboard)
     if (pending || typing() || !letterboxed()) return;
     pending = true;
-    const preH = window.innerHeight;
+    lbH = window.innerHeight;
     document.documentElement.requestFullscreen({ navigationUI: 'hide' })
-      .then(() => estimateCutout(preH))
       .catch(() => {})
       .finally(() => { pending = false; });
   }, { capture: true, passive: true });
@@ -5952,25 +5978,48 @@ if (window.visualViewport) {
      env(safe-area-inset-top) of 0, leaving the status icons under the
      camera. The letterbox itself told us the cutout height: entering
      fullscreen grows the window by exactly that much. When env() is
-     dead, use the growth as the inset (--safe-top-est). */
-  function estimateCutout(preH) {
-    let tries = 0;
-    (function settle() {
-      // the window takes its new size a few frames after the promise
-      if (window.innerHeight === preH && tries++ < 30) return requestAnimationFrame(settle);
-      const grown = Math.min(80, window.innerHeight - preH);
-      if (grown > 4 && measurePx('env(safe-area-inset-top, 0px)') < 4) {
-        document.documentElement.style.setProperty('--safe-top-est', grown + 'px');
-      }
+     dead, use the growth as the inset (--safe-top-est) and remember it
+     per device, so every later launch pads correctly as soon as the
+     window is edge-to-edge. */
+  const LS_CUTOUT = 'phoneOS_cutoutPx';
+
+  function applyCutoutEst() {
+    const saved = parseInt(localStorage.getItem(LS_CUTOUT) || '0', 10);
+    const edgeToEdge = screen.height - window.innerHeight <= 8 &&
+                       screen.width  - window.innerWidth  <= 8;
+    if (saved > 4 && edgeToEdge && measurePx('env(safe-area-inset-top, 0px)') < 4) {
+      document.documentElement.style.setProperty('--safe-top-est', saved + 'px');
       stampBuild();
+    }
+  }
+
+  function estimateCutout(preH) {
+    // Poll on a timer, not animation frames — frames can stall through
+    // the fullscreen transition, and the window grows a beat after it
+    const t0 = performance.now();
+    (function poll() {
+      if (window.innerHeight > preH + 4) {
+        localStorage.setItem(LS_CUTOUT, String(Math.min(80, window.innerHeight - preH)));
+        applyCutoutEst();
+      } else if (performance.now() - t0 < 2000) {
+        setTimeout(poll, 50);
+      }
     })();
   }
+
   document.addEventListener('fullscreenchange', () => {
-    // letterboxing comes back when fullscreen drops — the estimate must not
-    if (!document.fullscreenElement) {
+    if (document.fullscreenElement) {
+      if (lbH) estimateCutout(lbH);
+    } else {
+      // letterboxing comes back when fullscreen drops — the estimate
+      // must not; re-check once the window size settles
       document.documentElement.style.removeProperty('--safe-top-est');
+      setTimeout(applyCutoutEst, 500);
     }
   });
+
+  window.addEventListener('resize', applyCutoutEst);
+  applyCutoutEst();
 })();
 
 /* ============================================================

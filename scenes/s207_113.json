@@ -1,24 +1,17 @@
 {
   "sceneId": "s207_113",
-  "sceneLabel": "207 Sc113 — Ryan texts — no reply",
+  "sceneLabel": "207 Sc113 — Ryan types and sends text",
   "charId": "ryan",
   "clockTime": "9:04 PM",
   "battery": 2,
   "signal": 3,
   "wifi": 2,
   "airplaneMode": false,
-  "startLocked": true,
+  "startLocked": false,
   "notifications": [],
-  "lockNotifications": [],
   "sceneType": "text",
   "sceneContact": null,
-  "priorMessages": [
-    {
-      "from": "me",
-      "text": "Where's the meeting?"
-    }
-  ],
-  "sceneMessage": null,
-  "sceneReply": null,
-  "lockType": "swipe"
+  "priorMessages": [],
+  "sceneMessage": "Where's the meeting?",
+  "sceneReply": null
 }

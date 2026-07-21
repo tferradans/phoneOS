@@ -1,5 +1,5 @@
 {
-  "version": "2026-07-20 12:42:25",
+  "version": "2026-07-21 09:55:39",
   "assets": [
     "./",
     "./index.html",
@@ -123,8 +123,9 @@
     "./scenes/svfx_intense_green.json",
     "./scenes/svfx_intense_grey.json",
     "./scenes/svfx_no_reflection.json",
-    "./docs/207_advisory.md",
-    "./docs/207_itinerary_whitmore.md",
-    "./docs/207_permit_whitmore.md"
+    "./docs/207_bkb_manifest.html",
+    "./docs/207_bkb_SOURCES.md",
+    "./docs/207_bkb_tripsheet.html",
+    "./docs/207_bkb_waiver.html"
   ]
 }

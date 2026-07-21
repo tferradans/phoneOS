@@ -10,22 +10,22 @@
   "startLocked": false,
   "notifications": [],
   "sceneType": "docs",
-  "docTitle": "Files",
+  "docTitle": "Files — from Travis Stingly",
   "docs": [
     {
-      "title": "Backcountry Permit — CRNP-4471",
-      "file": "docs/207_permit_whitmore.md",
-      "meta": "Permit register · Bear Claw Junction"
+      "title": "Trip Reference Sheet — Crystal Ridge Excursion",
+      "file": "docs/207_bkb_tripsheet.html",
+      "meta": "Trip overview · Bear Claw Junction"
     },
     {
-      "title": "Route Itinerary — Whitmore Party",
-      "file": "docs/207_itinerary_whitmore.md",
-      "meta": "3 days · Upper Basin"
+      "title": "Party Manifest — 9 in party",
+      "file": "docs/207_bkb_manifest.html",
+      "meta": "8 participants + lead guide"
     },
     {
-      "title": "Trail Advisory — Sector 7",
-      "file": "docs/207_advisory.md",
-      "meta": "Posted this season"
+      "title": "Liability & Assumption of Risk Waiver",
+      "file": "docs/207_bkb_waiver.html",
+      "meta": "Back to Basics · Form BTB-LR-0725"
     }
   ],
   "docOpen": null

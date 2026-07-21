@@ -11,7 +11,7 @@
   "startLocked": false,
   "notifications": [],
   "sceneType": "call",
-  "sceneContact": null,
+  "sceneContact": "A.S.",
   "callDir": "outgoing",
   "callOutcome": "voicemail",
   "callDuration": null

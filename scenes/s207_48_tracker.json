@@ -1,6 +1,7 @@
 {
   "sceneId": "s207_48_tracker",
   "sceneLabel": "207 Sc48 — Cam 12 coords on tracker (from thread link)",
+  "approvalSkip": true,
   "charId": "jodi",
   "clockTime": "1:38 PM",
   "battery": 4,
@@ -24,6 +25,6 @@
   "telemetry": [
     { "label": "From", "value": "BERNARD, TYSON" },
     { "label": "Origin", "value": "NPS HQ" },
-    { "label": "Location", "value": "48.7621° N, 118.2043° W" }
+    { "label": "Location", "value": "40.4228° N, 105.6934° W" }
   ]
 }

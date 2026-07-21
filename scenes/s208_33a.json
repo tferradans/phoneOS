@@ -15,7 +15,7 @@
   "priorMessages": [
     {
       "from": "them",
-      "text": "Had a really nice time. Thanks, Bill."
+      "text": "Had a really nice time.\nThanks Bill."
     }
   ],
   "sceneMessage": "Can we meet?",
