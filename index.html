@@ -69,7 +69,13 @@
     --font-ui:       'SFUI', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   }
 
-  * { -webkit-user-select: none; user-select: none; }
+  /* No native long-press callout ("Save/Copy Image", "Open Link") anywhere —
+     these are on-set device screens, never a browser the user reaches into.
+     -webkit-touch-callout kills the iOS long-press sheet; the drag lock stops
+     an image being dragged out. Desktop/Android right-click is handled by the
+     contextmenu guard in JS. */
+  * { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+  img { -webkit-user-drag: none; user-drag: none; }
 
   /* Phones never show desktop scroll gutters — every in-phone scroll
      area scrolls bare (touch/wheel still work) */
@@ -5872,6 +5878,12 @@ phoneChromeEl.addEventListener('touchend',    lpCancel);
 phoneChromeEl.addEventListener('touchcancel', lpCancel);
 phoneChromeEl.addEventListener('mousedown',   e => { if (e.button === 0) lpStart(e.clientX, e.clientY); });
 phoneChromeEl.addEventListener('mouseup',     lpCancel);
+
+// Suppress the native image context menu (desktop right-click / Android
+// long-press). iOS is covered by -webkit-touch-callout in CSS. Scoped to
+// images so devs keep right-click elsewhere; the map bg (.mapimg) is the
+// element that was popping "Save/Copy Image".
+document.addEventListener('contextmenu', e => { if (e.target.tagName === 'IMG') e.preventDefault(); });
 
 // ── Double tap top strip → restart ──────────────────────────
 const DT_MS        = 350;
