@@ -1360,6 +1360,120 @@
   .text-send-btn.ready { opacity: 1; }
   .text-send-btn svg { width: 16px; height: 16px; fill: var(--msg-bubble-me-ink); }
 
+  /* ── In-app keyboard — module card ──────────────────────────
+     Drawn Gboard-style board (Pixel reference, show font). Replaces
+     the system IME entirely: the compose field is inputmode="none",
+     so the OS never raises its own keyboard and the whole class of
+     per-device viewport fights ends here. Modern-Gboard flat look —
+     bare glyphs on the board, pill caps only on space and return.
+     Light sheet by default; follows the module's .msg-dark sheet. */
+  .kbd {
+    --kbd-bg:         #eff1f6;   /* board surface */
+    --kbd-ink:        #202126;   /* key glyphs */
+    --kbd-ink-dim:    #5f6368;   /* toolbar icons, number hints */
+    --kbd-cap:        #ffffff;   /* space pill + key-pop bubble */
+    --kbd-accent:     #0b57d0;   /* return pill (Gboard blue, deliberately
+                                    NOT --msg-action: the board imitates the
+                                    OS keyboard, not the messages app) */
+    --kbd-accent-ink: #fff;
+    --kbd-press:      rgba(0,0,0,0.08);
+    --kbd-font-key:   calc(23px * var(--font-scale));
+    --kbd-font-fn:    calc(14px * var(--font-scale));   /* ?123 / ABC */
+    --kbd-font-hint:  calc(11px * var(--font-scale));
+    --kbd-font-pop:   calc(30px * var(--font-scale));
+
+    position: fixed;             /* escapes the screen's flex column; the
+                                    screen's bottom lifts to var(--kb) and
+                                    the board fills exactly that strip */
+    left: 0; right: 0; bottom: 0;
+    z-index: 60;
+    background: var(--kbd-bg);
+    font-family: var(--font-ui);
+    padding: 2px 4px 10px;
+    transform: translateY(105%);
+    transition: transform 0.14s ease-out;
+    pointer-events: none;
+  }
+  .kbd.open { transform: none; pointer-events: auto; }
+
+  /* dark sheet — rides the module's theme class, nothing extra to opt into */
+  #phone-chrome.msg-dark .kbd {
+    --kbd-bg:         #1c1e24;
+    --kbd-ink:        #e8eaf0;
+    --kbd-ink-dim:    #9aa0a8;
+    --kbd-cap:        #2f3237;
+    --kbd-accent:     #a8c7fa;
+    --kbd-accent-ink: #0b305b;
+    --kbd-press:      rgba(255,255,255,0.10);
+  }
+
+  .kbd-toolbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 4px 14px 6px;
+  }
+  .kbd-toolbar svg { width: 22px; height: 22px; fill: var(--kbd-ink-dim); }
+
+  .kbd-row { display: flex; padding: 0 2px; margin-bottom: 2px; }
+  .kbd-row.indent { padding: 0 5%; }
+
+  .kbd-key {
+    flex: 1;
+    height: calc(48px * var(--font-scale));
+    display: flex; align-items: center; justify-content: center;
+    position: relative;
+    border-radius: 8px;
+    font-size: var(--kbd-font-key);
+    font-weight: 400;
+    color: var(--kbd-ink);
+    cursor: default;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .kbd-key.press { background: var(--kbd-press); }
+  .kbd-key .hint {
+    position: absolute; top: 3px; right: 7px;
+    font-size: var(--kbd-font-hint);
+    color: var(--kbd-ink-dim);
+  }
+  .kbd-key.fn { font-size: var(--kbd-font-fn); font-weight: 500; }
+  .kbd-key svg { width: 24px; height: 24px; fill: var(--kbd-ink); }
+  .kbd-key.wide  { flex: 1.4; }
+  .kbd-key.wider { flex: 1.6; }
+  .kbd-key.space { flex: 4.2; }
+  .kbd-key.space::before {
+    content: ''; position: absolute; inset: 6px 4px;
+    background: var(--kbd-cap); border-radius: 999px;
+  }
+  .kbd-key.ret::before {
+    content: ''; position: absolute; inset: 5px 4px;
+    background: var(--kbd-accent); border-radius: 999px;
+  }
+  .kbd-key.ret svg { position: relative; fill: var(--kbd-accent-ink); }
+  /* shift: caps-lock shows the underbar + accent tint */
+  .kbd-key.shift .capsbar { opacity: 0; }
+  .kbd-key.shift.lock .capsbar { opacity: 1; }
+  .kbd-key.shift.lock svg { fill: var(--kbd-accent); }
+  /* shifted/caps: letter labels render uppercase */
+  .kbd-layer.caps .kbd-key.ltr { text-transform: uppercase; }
+
+  /* key-pop preview above the pressed key (letters/symbols only) */
+  .kbd-pop {
+    position: fixed;
+    z-index: 70;
+    min-width: 44px; height: 56px;
+    padding: 0 6px;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--kbd-cap);
+    color: var(--kbd-ink);
+    border-radius: 10px;
+    font-size: var(--kbd-font-pop);
+    box-shadow: 0 2px 10px rgba(0,0,0,0.25);
+    pointer-events: none;
+  }
+
+  /* board open: it covers the home-indicator zone, so the composer's
+     30px indicator pad is stolen thread height — give it back */
+  html.kbd-open .text-input-row { padding-bottom: 8px; }
+
   /* ============================================================
      WALLET — crypto wallet (rebuilt)
   ============================================================ */
@@ -2588,13 +2702,19 @@
         <svg viewBox="0 0 24 24"><path d="M12 15.2A3.2 3.2 0 1 0 12 8.8a3.2 3.2 0 0 0 0 6.4zm0 0"/><path d="M9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/></svg>
       </button>
       <div class="text-input-wrap">
+        <!-- inputmode="none": the system IME must NEVER engage — the drawn
+             in-app keyboard below is the only typing surface. This is what
+             ends the per-device viewport fights (S8/Pixel/SE). A physical
+             keyboard (desktop authoring) still types normally. -->
         <textarea class="text-input-field" id="text-input" placeholder="SMS message" rows="1"
-                  autocomplete="off" autocorrect="off" spellcheck="false"></textarea>
+                  inputmode="none" autocomplete="off" autocorrect="off" spellcheck="false"></textarea>
       </div>
       <button class="text-send-btn" id="btn-send">
         <svg viewBox="0 0 24 24"><path d="M4 12l1.41 1.41L11 7.83V20h2V7.83l5.58 5.59L20 12l-8-8-8 8z"/></svg>
       </button>
     </div>
+    <!-- IN-APP KEYBOARD — DOM built by buildKbdDom, wired in buildTextScreen -->
+    <div class="kbd" id="kbd"></div>
   </div>
 
   <!-- DOCS — content built by the docs module -->
@@ -5748,6 +5868,117 @@ function buildTextScreen(cfg, ctx) {
     el.style.height = el.scrollHeight + 'px';
   }
 
+  /* ── In-app keyboard ─────────────────────────────────────────
+     The compose field is inputmode="none": the system IME never
+     engages, this drawn board is the only keyboard on every prop
+     phone. It speaks to the module through the SAME channel the
+     real keyboard did — mutate inputEl.value, dispatch 'input' —
+     so the scripted-reveal / draft / free-typing logic above needs
+     no changes and cannot tell the difference. */
+  const kbdEl = document.getElementById('kbd');
+  buildKbdDom(kbdEl);
+  const kbdLtr = kbdEl.querySelector('.ltr-layer');
+  const kbdSym = kbdEl.querySelector('.sym-layer');
+  // per-scene state reset (DOM persists across scenes)
+  kbdLtr.style.display = ''; kbdSym.style.display = 'none';
+  let kbdShift = 0;            // 0 off · 1 next-char · 2 caps-lock
+  let lastShiftTap = 0;
+  let bkspHold = null, bkspRep = null, popEl = null;
+
+  function kbdShow() {
+    if (kbdEl.classList.contains('open')) return;
+    kbdEl.classList.add('open');
+    document.documentElement.classList.add('kbd-open');
+    // lift the screen — the same --kb contract the system keyboard used
+    document.documentElement.style.setProperty('--kb', kbdEl.offsetHeight + 'px');
+    // paint the root canvas to the board colour so the strip the screen
+    // vacates never flashes black behind the 140ms slide-in
+    document.documentElement.style.background = getComputedStyle(kbdEl).backgroundColor;
+    thread.scrollTop = thread.scrollHeight;
+    kbdAutoShift();
+  }
+  function kbdHide() {
+    if (!kbdEl.classList.contains('open')) return;
+    kbdEl.classList.remove('open');
+    document.documentElement.classList.remove('kbd-open');
+    document.documentElement.style.removeProperty('--kb');
+    document.documentElement.style.background = '';
+    inputEl.blur();
+  }
+
+  function kbdSetShift(n) {
+    kbdShift = n;
+    kbdLtr.classList.toggle('caps', n > 0);
+    kbdEl.querySelector('.kbd-key.shift').classList.toggle('lock', n === 2);
+  }
+  // Gboard autocapitalize: shift arms on an empty field or after
+  // sentence-ending punctuation + space; caps-lock is never overridden
+  function kbdAutoShift() {
+    if (kbdShift === 2) return;
+    kbdSetShift(inputEl.value === '' || /[.!?]\s$/.test(inputEl.value) ? 1 : 0);
+  }
+
+  function kbdKey(ch) {
+    if (inputEl.disabled) return;
+    inputEl.value += ch;
+    inputEl.dispatchEvent(new Event('input', { bubbles: true }));
+    kbdAutoShift();
+  }
+  function kbdBksp() {
+    if (inputEl.disabled) return;
+    if (inputEl.value.length) {
+      inputEl.value = inputEl.value.slice(0, -1);
+      inputEl.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+    kbdAutoShift();
+  }
+
+  function kbdPop(keyEl, label) {
+    kbdPopHide();
+    popEl = document.createElement('div');
+    popEl.className = 'kbd-pop';
+    popEl.textContent = label;
+    kbdEl.appendChild(popEl);
+    const r = keyEl.getBoundingClientRect();
+    popEl.style.left = (r.left + r.width / 2 - 22) + 'px';
+    popEl.style.top  = (r.top - 60) + 'px';
+  }
+  function kbdPopHide() { if (popEl) { popEl.remove(); popEl = null; } }
+
+  ctx.listen(kbdEl, 'pointerdown', e => {
+    e.preventDefault();               // keep focus + caret in the field
+    const keyEl = e.target.closest('[data-k]');
+    if (!keyEl) return;
+    keyEl.classList.add('press');
+    const k = keyEl.dataset.k;
+    if (k === 'shift') {
+      const now = Date.now();
+      kbdSetShift(kbdShift === 2 ? 0 : (now - lastShiftTap < 300 ? 2 : (kbdShift ? 0 : 1)));
+      lastShiftTap = now;
+    } else if (k === 'bksp') {
+      kbdBksp();
+      bkspHold = sceneTimeout(() => { bkspRep = sceneInterval(kbdBksp, 50); }, 380);
+    } else if (k === 'sym') { kbdLtr.style.display = 'none'; kbdSym.style.display = ''; }
+    else if (k === 'abc')  { kbdSym.style.display = 'none'; kbdLtr.style.display = ''; }
+    else if (k === 'ret')  { kbdKey('\n'); }   // '\n' = send, matching the IME path
+    else if (k === 'space'){ kbdKey(' '); }
+    else if (k !== 'noop') {
+      const ch = (keyEl.classList.contains('ltr') && kbdShift > 0) ? k.toUpperCase() : k;
+      kbdPop(keyEl, ch);
+      kbdKey(ch);
+    }
+  });
+  ctx.listen(window, 'pointerup', () => {
+    kbdEl.querySelectorAll('.press').forEach(el => el.classList.remove('press'));
+    sceneTimeout(kbdPopHide, 60);
+    if (bkspHold) { clearTimeout(bkspHold); bkspHold = null; }
+    if (bkspRep)  { clearInterval(bkspRep);  bkspRep  = null; }
+  });
+
+  // field raises the board; tapping into the thread dismisses it
+  ctx.listen(inputEl, 'focus', kbdShow);
+  ctx.listen(thread, 'pointerdown', kbdHide);
+
   // Auto-type toggle (Settings, off by default). OFF: every scripted
   // scene is actor-driven — including drafts, where keystrokes reveal
   // the draft and backspace erases it. ON: the phone performs alone
@@ -5810,12 +6041,15 @@ function buildTextScreen(cfg, ctx) {
 
   // Auto-type ON: the phone performs the scripted typing itself
   if (autoType && cfg.deleteDraft && cfg.draftMessage) {
-    // type → hesitate → erase, input locked throughout
+    // type → hesitate → erase, input locked throughout — board up, as a
+    // real phone would look while being typed on
     inputEl.setAttribute('disabled', 'true');
+    kbdShow();
     runDeleteDraft(inputEl, cfg.draftMessage, () => inputEl.removeAttribute('disabled'));
   } else if (autoType && cfg.sceneMessage) {
     // type the message, then hand control back — send stays a manual tap
     inputEl.setAttribute('disabled', 'true');
+    kbdShow();
     autoTypeInto(inputEl, cfg.sceneMessage, () => {
       inputEl.removeAttribute('disabled');
       pos = cfg.sceneMessage.length;   // reveal state = fully typed
@@ -5890,6 +6124,62 @@ function addBubble(container, text, side, time, image) {
 }
 
 /* ── Messages — module registration ─────────────────────────*/
+/* ============================================================
+   IN-APP KEYBOARD — DOM
+   Drawn Gboard-style board (Pixel reference). Markup only — all
+   behavior is wired inside buildTextScreen, where the module ctx
+   lives. Built once and kept; per-scene state (shift, layer) is
+   reset by the module, listeners die with the ctx.
+============================================================ */
+function buildKbdDom(root) {
+  if (root.dataset.built) return;
+  root.dataset.built = '1';
+
+  const key = (k, cls, label) => `<div class="kbd-key ${cls}" data-k="${k}">${label}</div>`;
+  const ltr = (c, hint) => `<div class="kbd-key ltr" data-k="${c}">${c}${hint ? `<span class="hint">${hint}</span>` : ''}</div>`;
+  const chr = c => `<div class="kbd-key chr" data-k="${esc(c)}">${esc(c)}</div>`;
+
+  const svgShift = '<svg viewBox="0 0 24 24"><path d="M12 3.5 4.5 11H9v6h6v-6h4.5z"/><path class="capsbar" d="M9 19h6v2H9z"/></svg>';
+  const svgBksp  = '<svg viewBox="0 0 24 24"><path d="M22 3H7c-.69 0-1.23.35-1.59.88L0 12l5.41 8.11c.36.53.9.89 1.59.89h15c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-3 12.59L17.59 17 14 13.41 10.41 17 9 15.59 12.59 12 9 8.41 10.41 7 14 10.59 17.59 7 19 8.41 15.41 12 19 15.59z"/></svg>';
+  const svgRet   = '<svg viewBox="0 0 24 24"><path d="M19 7v4H5.83l3.58-3.59L8 6l-6 6 6 6 1.41-1.41L5.83 13H21V7z"/></svg>';
+  const svgMood  = '<svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 12 2zm3.5 6c.83 0 1.5.67 1.5 1.5s-.67 1.5-1.5 1.5-1.5-.67-1.5-1.5.67-1.5 1.5-1.5zm-7 0c.83 0 1.5.67 1.5 1.5S9.33 11 8.5 11 7 10.33 7 9.5 7.67 8 8.5 8zm3.5 9.5c-2.33 0-4.31-1.46-5.11-3.5h10.22c-.8 2.04-2.78 3.5-5.11 3.5z"/></svg>';
+  const svgGrid  = '<svg viewBox="0 0 24 24"><path d="M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z"/></svg>';
+  const svgGear  = '<svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>';
+  const svgPalette = '<svg viewBox="0 0 24 24"><path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9c.83 0 1.5-.67 1.5-1.5 0-.39-.15-.74-.39-1.01-.23-.26-.38-.61-.38-.99 0-.83.67-1.5 1.5-1.5H16c2.76 0 5-2.24 5-5 0-4.42-4.03-8-9-8zm-5.5 9c-.83 0-1.5-.67-1.5-1.5S5.67 9 6.5 9 8 9.67 8 10.5 7.33 12 6.5 12zm3-4C8.67 8 8 7.33 8 6.5S8.67 5 9.5 5s1.5.67 1.5 1.5S10.33 8 9.5 8zm5 0c-.83 0-1.5-.67-1.5-1.5S13.67 5 14.5 5s1.5.67 1.5 1.5S15.33 8 14.5 8zm3 4c-.83 0-1.5-.67-1.5-1.5S16.67 9 17.5 9s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg>';
+  const svgGif   = '<svg viewBox="0 0 24 24"><text x="12" y="16.5" text-anchor="middle" font-size="11" font-weight="700" font-family="inherit">GIF</text></svg>';
+  const svgMic   = svgCallMute();   // same glyph the call card uses
+
+  const row = (cls, inner) => `<div class="kbd-row ${cls}">${inner}</div>`;
+  const bottomRow = layerToggle =>
+    row('', layerToggle + chr(',') + key('noop', 'fn', svgMood) +
+            key('space', 'space', '') + chr('.') + key('ret', 'wider ret', svgRet));
+
+  const ltrLayer =
+    row('', 'qwertyuiop'.split('').map((c, i) => ltr(c, '1234567890'[i])).join('')) +
+    row('indent', 'asdfghjkl'.split('').map(c => ltr(c)).join('')) +
+    row('', key('shift', 'wide shift fn', svgShift) +
+            'zxcvbnm'.split('').map(c => ltr(c)).join('') +
+            key('bksp', 'wide fn', svgBksp)) +
+    bottomRow(key('sym', 'wider fn', '?123'));
+
+  const symLayer =
+    row('', '1234567890'.split('').map(chr).join('')) +
+    row('', '@#$_&-+()/'.split('').map(chr).join('')) +
+    row('', key('noop', 'wide fn', '=\\&lt;') +
+            '*"\':;!?'.split('').map(chr).join('') +
+            key('bksp', 'wide fn', svgBksp)) +
+    bottomRow(key('abc', 'wider fn', 'ABC'));
+
+  root.innerHTML =
+    `<div class="kbd-toolbar">` +
+      ['grid', 'mood', 'gif', 'gear', 'palette', 'mic'].map(n =>
+        `<span data-k="noop">${({ grid: svgGrid, mood: svgMood, gif: svgGif,
+                                  gear: svgGear, palette: svgPalette, mic: svgMic })[n]}</span>`).join('') +
+    `</div>` +
+    `<div class="kbd-layer ltr-layer">${ltrLayer}</div>` +
+    `<div class="kbd-layer sym-layer" style="display:none">${symLayer}</div>`;
+}
+
 MODULES.messages = {
   defaults: { priorMessages: [] },
 
@@ -5904,6 +6194,12 @@ MODULES.messages = {
     inp.removeAttribute('disabled'); inp.removeAttribute('readonly');
     document.getElementById('btn-send').classList.remove('ready');
     document.getElementById('text-thread').innerHTML = '';
+    // keyboard: the lift, root class and canvas paint are chrome-level
+    // state the ctx can't strike (its DOM persists; state resets on build)
+    document.getElementById('kbd').classList.remove('open');
+    document.documentElement.classList.remove('kbd-open');
+    document.documentElement.style.removeProperty('--kb');
+    document.documentElement.style.background = '';
   }
 };
 
@@ -6377,6 +6673,10 @@ if (window.visualViewport) {
   let kbRaf = null;
   function applyKb() {
     kbRaf = null;
+    /* the drawn in-app keyboard owns --kb while open — the system IME
+       can't appear over it (inputmode=none), so any resize landing here
+       is rotation/chrome noise that must not stomp the board's lift */
+    if (document.documentElement.classList.contains('kbd-open')) return;
     const kb = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
     document.documentElement.style.setProperty('--kb', kb + 'px');
     if (window.scrollY || vv.offsetTop) window.scrollTo(0, 0);
