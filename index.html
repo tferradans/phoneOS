@@ -6380,12 +6380,26 @@ if (window.visualViewport) {
   let kbRaf = null;
   function applyKb() {
     kbRaf = null;
-    const kb = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
+    /* Measure against the ICB — documentElement.clientHeight — NOT
+       window.innerHeight. The screens are position:fixed, so the ICB is
+       the box their `bottom` actually resolves against, and it's the
+       only reference that stays honest across the two ways a browser
+       can react to a keyboard:
+         iOS      layout viewport unchanged, page panned → ICB stays
+                  full, kb = the real overlap, screens lift.
+         Android  interactive-widget=resizes-content shrinks the ICB
+                  itself → the screens are already above the keyboard
+                  and this arithmetic yields ~0, as it should.
+       Measuring from innerHeight got the second case wrong: it stayed
+       full-height while the ICB shrank, so --kb subtracted the keyboard
+       a second time and left a band of body-black above it. That band
+       was there all along — the overflowing input row used to paint
+       over it, which is why it only surfaced once the layout was fixed. */
+    const icb = document.documentElement.clientHeight;
+    const kb = Math.max(0, Math.min(icb, icb - vv.height - vv.offsetTop));
     document.documentElement.style.setProperty('--kb', kb + 'px');
-    /* Android (interactive-widget=resizes-content) shrinks the LAYOUT
-       viewport instead, so the fixed screens already sit above the
-       keyboard and --kb reads 0 — the class can't be derived from kb
-       alone. Focus is the reliable signal on both platforms. */
+    /* On Android the lift is 0 by design (see above), so the class can't
+       be derived from kb alone — focus is the signal that works on both. */
     document.documentElement.classList.toggle('kb-open', kb > 60 || textFieldFocused());
     if (window.scrollY || vv.offsetTop) window.scrollTo(0, 0);
     // keep an open message thread pinned to its newest bubble
