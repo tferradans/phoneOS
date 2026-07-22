@@ -2,7 +2,17 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content">
+<!-- interactive-widget=overlays-content: the soft keyboard OVERLAYS the
+     page instead of shrinking the layout box. This is deliberate and
+     load-bearing. Under the previous resizes-content, Android shrank the
+     layout viewport when the keyboard opened while the Fullscreen-API
+     element stayed full-screen — Chrome letterboxed the difference as a
+     black band between the app and the keyboard (bigger keyboard = bigger
+     band). overlays-content keeps the layout box full, so there is
+     nothing to letterbox, and Android now takes the SAME path iOS always
+     did: visualViewport reports the overlap, --kb lifts the screens above
+     it (see the SOFT KEYBOARD block). One code path, no black band. -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, interactive-widget=overlays-content">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="mobile-web-app-capable" content="yes">
@@ -6416,13 +6426,40 @@ if (window.visualViewport) {
     document.documentElement.style.setProperty('--kb', kb + 'px');
     /* In case A the lift is 0 by design, so the class can't be derived
        from kb alone — focus is the signal that holds on both platforms. */
-    document.documentElement.classList.toggle('kb-open', kb > 60 || textFieldFocused());
+    const kbOpen = kb > 60 || textFieldFocused();
+    document.documentElement.classList.toggle('kb-open', kbOpen);
+    paintCanvas(kbOpen);
     if (window.scrollY || vv.offsetTop) window.scrollTo(0, 0);
     // keep an open message thread pinned to its newest bubble
     const thread = document.querySelector('#screen-text:not(.hidden) .text-thread');
     if (thread) thread.scrollTop = thread.scrollHeight;
     if (kbDiag) kbDiag(icb, icbRest, shrunk, kb);
   }
+  /* ── The strip below the layout viewport ────────────────────────────
+     In case A Chrome shrinks the layout box by MORE than the keyboard
+     (415px on a Pixel 7 for a ~350px keyboard), leaving a strip between
+     the app's bottom edge and the top of the keyboard. Nothing we lay
+     out can cover it: position:fixed is clipped to the viewport, so no
+     element paints below the ICB. The root element's background is the
+     only thing that reaches there — CSS propagates it to the canvas,
+     which is painted across the whole window. `html { background:#000 }`
+     is therefore what was drawing that black band.
+
+     So colour the canvas to match whatever sits at the app's bottom
+     edge — read off the live composer bar, which keeps it correct under
+     the msg-dark theme without hardcoding a second copy of the token.
+     The strip then reads as the input bar running down to the keyboard. */
+  function paintCanvas(kbOpen) {
+    const row = document.querySelector('#screen-text:not(.hidden) .text-input-row');
+    let fill = '';
+    if (kbOpen && row) fill = getComputedStyle(row).backgroundColor;
+    // ?kbdiag=1 paints it magenta instead: if the band turns magenta the
+    // canvas is confirmed as the source, if it stays black it is system
+    // chrome and no CSS of ours will ever reach it.
+    if (kbDiag && kbOpen) fill = '#f0f';
+    document.documentElement.style.background = fill;
+  }
+
   function queueKb() { if (!kbRaf) kbRaf = requestAnimationFrame(applyKb); }
   vv.addEventListener('resize', queueKb);
   vv.addEventListener('scroll', queueKb);
@@ -6457,7 +6494,8 @@ if (window.visualViewport) {
         'screenBottom ' + (sc ? Math.round(sc.getBoundingClientRect().bottom) : '–') +
         '  inputBottom ' + (row ? Math.round(row.getBoundingClientRect().bottom) : '–') + '\n' +
         'fs ' + (document.fullscreenElement ? 'yes' : 'no') +
-        '  focus ' + (textFieldFocused() ? 'field' : 'none');
+        '  focus ' + (textFieldFocused() ? 'field' : 'none') +
+        '  canvas ' + (document.documentElement.style.background || '#000');
     };
   }
 }
