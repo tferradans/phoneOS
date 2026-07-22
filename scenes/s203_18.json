@@ -1,0 +1,31 @@
+{
+  "sceneId": "s203_18",
+  "sceneLabel": "203 Sc18 — Ryan gets Tyson's text (Logan Hayes found dead)",
+  "charId": "ryan",
+  "clockTime": "10:47 AM",
+  "battery": 4,
+  "signal": 3,
+  "wifi": 0,
+  "airplaneMode": false,
+  "startLocked": true,
+  "lockType": "swipe",
+  "notifications": [],
+  "lockNotifications": [
+    {
+      "app": "New Message",
+      "icon": "msgBubble",
+      "title": "Tyson Bernard",
+      "text": "Logan Hayes found dead in park…"
+    }
+  ],
+  "sceneType": "text",
+  "sceneContact": "tyson",
+  "priorMessages": [
+    {
+      "from": "them",
+      "text": "Logan Hayes found dead in park. Looks like foul play."
+    }
+  ],
+  "sceneMessage": null,
+  "sceneReply": null
+}

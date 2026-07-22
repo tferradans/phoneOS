@@ -1,5 +1,5 @@
 {
-  "version": "2026-07-21 14:23:42",
+  "version": "2026-07-22 00:05:12",
   "assets": [
     "./",
     "./index.html",
@@ -71,6 +71,7 @@
     "./chars/tyson.json",
     "./chars/tyson_drone.json",
     "./chars/vfx.json",
+    "./scenes/s203_18.json",
     "./scenes/s207_103.json",
     "./scenes/s207_11.json",
     "./scenes/s207_110.json",
