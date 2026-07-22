@@ -375,6 +375,25 @@
     z-index: 500;
   }
 
+  /* Proximity blank — the phone is at the actor's ear, kill the screen.
+     Separate layer from #screen-dim on purpose: that one is the DP's
+     brightness token and the approval captures depend on its value.
+     z-index 250 puts this over the whole phone UI incl. the status bar
+     (100) but UNDER #quick-settings (300), so the blank can never lock
+     the operator out of the panel. Ordering against #screen-dim (500)
+     doesn't matter — two blacks.
+     Unlike the dim, this one SWALLOWS INPUT when lit: that's the whole
+     point, a cheek must not be able to dial or hang up. */
+  #screen-prox {
+    position: absolute; inset: 0;
+    background: #000;
+    opacity: 0;
+    pointer-events: none;
+    z-index: 250;
+    transition: opacity 120ms linear;
+  }
+  #screen-prox.on { opacity: 1; pointer-events: auto; }
+
   /* wallpaper layer — sits behind everything */
   #wallpaper {
     position: absolute;
@@ -2561,6 +2580,9 @@
 
   <!-- Screen dim overlay — software brightness (settings) -->
   <div id="screen-dim"></div>
+
+  <!-- Proximity blank — driven by Prox, armed only during a live call -->
+  <div id="screen-prox"></div>
 
   <!-- WALLET — content built by the wallet module -->
   <div id="screen-wallet" class="screen hidden"></div>
@@ -4914,9 +4936,16 @@ function buildConnectedCall(el, cfg, name, showCalling, outcome) {
   }
 
   startCallTimer(el, cfg, showCalling, outcome);
+
+  // Live call is the only state where the phone goes to an ear, so it's
+  // the only state where proximity blanking is armed. On an incoming
+  // call we're inside the Accept click here — which is what lets iOS
+  // grant motion access (see Prox._startGesture).
+  Prox.arm(cfg.proximityBlank);
 }
 
 function buildCallEndedScreen(el, cfg, name) {
+  Prox.disarm();
   el.classList.remove('call-connected');
   el.classList.add('call-ended');
   document.getElementById('phone-chrome').classList.remove('incoming-mode');
@@ -5155,6 +5184,214 @@ function buildDialerScreen(cfg) {
   });
 }
 
+/* ============================================================
+   PROXIMITY BLANK — "phone to the ear, screen goes black"
+   ------------------------------------------------------------
+   The real IR proximity sensor is unreachable from a web app:
+   DeviceProximityEvent was removed from Chrome years ago and the
+   Generic Sensor ProximitySensor never shipped. So we INFER "at
+   the ear" from signals a page can actually see, and paint
+   #screen-prox black over the whole phone.
+
+   Scene key — proximityBlank: "off" | "gesture" | "camera"
+     gesture  raise-to-ear attitude + cheek-sized touch contact.
+              No permission on Android, no OS privacy indicator,
+              no battery cost, and it fires on the PERFORMANCE —
+              identical take after take. This is the default pick.
+     camera   front-camera occlusion. More literal, but it lights
+              the OS camera indicator (a green dot in frame is a
+              paint fix) and fights the torch stream. Opt-in, for
+              shots where the phone is camera-visible at the ear.
+   Both modes also run the touch source and the operator override.
+
+   Full trade-off write-up: PROXIMITY-BLANK-PLAN.md
+============================================================ */
+
+/* FIRST-CUT THRESHOLDS — these need a bench pass on the actual prop
+   handset before this goes anywhere near a shoot day. */
+const PROX_BETA_MIN   = 40;   // deg — phone is upright-ish...
+const PROX_GAMMA_MIN  = 25;   // deg — ...and rolled over onto the ear
+const PROX_TOUCH_R    = 30;   // px  — contact patch bigger than a fingertip
+const PROX_HOLD_MS    = 400;  // pose must persist this long before blanking
+const PROX_RELEASE_MS = 150;  // ...and clear this long before waking
+const PROX_DARK_ENTER = 8;    // camera: mean luma 0–255 to call it occluded
+const PROX_DARK_EXIT  = 25;   // camera: hysteresis, stay blanked longer
+const PROX_FLAT_MAX   = 6;    // camera: luma spread — a dark ROOM still has detail
+
+/* Kill switch. The detectors are also inert by nature under the
+   approval / burn-in capture rigs — Playwright fires no motion events,
+   reports no touch radii and denies the camera — so a capture can't
+   blank itself to black. The operator override is keyboard-only for
+   the same reason: a rig's clicks can never trip it. */
+const PROX_DISABLED = new URLSearchParams(location.search).has('noprox');
+
+const Prox = {
+  armed: false, blanked: false, mode: 'off',
+  _el: null, _src: {}, _hold: null, _rel: null, _stop: [],
+
+  /* mode comes straight off the merged cfg; anything falsy = off */
+  arm(mode) {
+    this.disarm();
+    if (PROX_DISABLED || !mode || mode === 'off') return;
+    this.mode = mode;
+    this.armed = true;
+
+    if (mode === 'camera') this._startCamera();
+    else                   this._startGesture();
+    this._startTouch();    // cheek contact is useful in BOTH modes
+    this._startManual();
+  },
+
+  disarm() {
+    clearTimeout(this._hold); clearTimeout(this._rel);
+    this._hold = this._rel = null;
+    this._stop.forEach(fn => { try { fn(); } catch (e) { console.warn('prox teardown:', e); } });
+    this._stop = [];
+    this._src = {};
+    this.armed = false;
+    this.mode = 'off';
+    this._paint(false);
+  },
+
+  /* Sources are OR'd — any one of them saying "near" is enough, and
+     ALL of them must clear before the screen comes back. Debounced
+     both ways so a wobble mid-sentence can't strobe the screen. */
+  _set(src, near) {
+    if (!this.armed || this._src[src] === near) return;
+    this._src[src] = near;
+    const any = Object.keys(this._src).some(k => this._src[k]);
+
+    if (any) {
+      clearTimeout(this._rel); this._rel = null;
+      if (this.blanked || this._hold) return;
+      this._hold = setTimeout(() => { this._hold = null; this._paint(true); }, PROX_HOLD_MS);
+    } else {
+      clearTimeout(this._hold); this._hold = null;
+      if (!this.blanked || this._rel) return;
+      this._rel = setTimeout(() => { this._rel = null; this._paint(false); }, PROX_RELEASE_MS);
+    }
+  },
+
+  _paint(on) {
+    this.blanked = on;
+    if (!this._el) this._el = document.getElementById('screen-prox');
+    if (this._el) this._el.classList.toggle('on', on);
+  },
+
+  _on(target, ev, fn, opts) {
+    target.addEventListener(ev, fn, opts);
+    this._stop.push(() => target.removeEventListener(ev, fn, opts));
+  },
+
+  /* ── Source: raise-to-ear attitude ──
+     Upright AND rolled to one side. gamma is the real discriminator —
+     reading the phone in front of your face is also beta ~45-70, but
+     it sits flat (gamma ~0); rolling it onto the ear is what swings
+     gamma out. Same permission dance as the drone module (~4495):
+     iOS gates motion events behind a user gesture, and the Accept
+     button we're called from IS one. On an auto-started outgoing call
+     there's no gesture and the request simply rejects — gesture mode
+     then rides on the touch source alone. */
+  _startGesture() {
+    if (window.DeviceOrientationEvent &&
+        typeof DeviceOrientationEvent.requestPermission === 'function') {
+      DeviceOrientationEvent.requestPermission().catch(() => {});
+    }
+    this._on(window, 'deviceorientation', e => {
+      if (e.beta == null || e.gamma == null) return;
+      this._set('pose', e.beta > PROX_BETA_MIN && Math.abs(e.gamma) > PROX_GAMMA_MIN);
+    });
+  },
+
+  /* ── Source: cheek contact ──
+     A face on the glass reports touches far larger than a fingertip,
+     usually several at once. Zero permission, and it's a direct
+     physical signal rather than an inference. Watch for OEM palm
+     rejection eating the contact before the browser sees it — that's
+     the one thing to check on the prop handset. */
+  _startTouch() {
+    const big = t => (t.radiusX || 0) > PROX_TOUCH_R || (t.radiusY || 0) > PROX_TOUCH_R;
+    const read = e => {
+      const ts = e.touches || [];
+      this._set('cheek', ts.length >= 3 || Array.prototype.some.call(ts, big));
+    };
+    ['touchstart', 'touchmove', 'touchend', 'touchcancel']
+      .forEach(ev => this._on(document, ev, read, { passive: true }));
+  },
+
+  /* ── Source: operator override ──
+     Hold P to blank, release to wake. Keyboard-only by design (see
+     PROX_DISABLED above), and it's also the only way to drive this on
+     a desk with no gyro and no touchscreen. */
+  _startManual() {
+    const hit = e => (e.key === 'p' || e.key === 'P');
+    this._on(window, 'keydown', e => { if (hit(e)) this._set('manual', true); });
+    this._on(window, 'keyup',   e => { if (hit(e)) this._set('manual', false); });
+  },
+
+  /* ── Source: front-camera occlusion ──
+     Sample a 16x16 downscale every 100ms. Occluded = DARK *and* FLAT:
+     the variance test is not optional, because a dark room is also
+     dark — but it still has detail, where a cheek at 1cm is a
+     featureless field. Falls back to gesture if the camera is denied
+     or unavailable.
+     KNOWN GAP: does not yet coordinate with setTorch() (~3050), which
+     holds the rear camera. Two live streams is a coin-flip across
+     Android OEMs — don't pair camera mode with a flashlight beat until
+     that's handled. */
+  _startCamera() {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      console.warn('prox: no getUserMedia — falling back to gesture');
+      this._startGesture();
+      return;
+    }
+    let stream = null, dead = false, iv = null;
+    const video = document.createElement('video');
+    video.muted = true;
+    video.setAttribute('playsinline', '');
+    const cv = document.createElement('canvas');
+    cv.width = cv.height = 16;
+    const cx = cv.getContext('2d', { willReadFrequently: true });
+
+    const sample = () => {
+      if (dead || video.readyState < 2) return;
+      cx.drawImage(video, 0, 0, 16, 16);
+      const d = cx.getImageData(0, 0, 16, 16).data;
+      const n = 16 * 16;
+      let sum = 0, sum2 = 0;
+      for (let i = 0; i < d.length; i += 4) {
+        const y = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
+        sum += y; sum2 += y * y;
+      }
+      const mean = sum / n;
+      const spread = Math.sqrt(Math.max(0, sum2 / n - mean * mean));
+      this._set('cam', this._src.cam
+        ? mean < PROX_DARK_EXIT
+        : mean < PROX_DARK_ENTER && spread < PROX_FLAT_MAX);
+    };
+
+    this._stop.push(() => {
+      dead = true;
+      if (iv) clearInterval(iv);
+      if (stream) stream.getTracks().forEach(t => t.stop());
+      video.srcObject = null;
+    });
+
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } })
+      .then(s => {
+        if (dead) { s.getTracks().forEach(t => t.stop()); return; }
+        stream = s;
+        video.srcObject = s;
+        video.play().catch(() => {});
+        iv = setInterval(sample, 100);
+      })
+      .catch(err => {
+        console.warn('prox: camera unavailable (' + err.message + ') — falling back to gesture');
+        if (!dead) this._startGesture();
+      });
+  }
+};
+
 /* ── Phone — module registration ────────────────────────────
    One module for the whole phone app: dialer, incoming, active
    and ended call. */
@@ -5191,6 +5428,7 @@ MODULES.phone = {
   },
 
   destroy() {
+    Prox.disarm();   // also covers hops out of a live call (contacts, keypad)
     document.getElementById('screen-call').classList.remove('call-connected', 'call-ended');
     document.getElementById('phone-chrome').classList.remove('incoming-mode');
   }

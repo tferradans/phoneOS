@@ -1,0 +1,19 @@
+{
+  "sceneId": "s200_01_prox",
+  "sceneLabel": "TEST Sc01 — Jodi calls Ryan (proximity blank)",
+  "charId": "ryan",
+  "clockTime": "2:14 PM",
+  "battery": 4,
+  "batteryCharging": false,
+  "signal": 4,
+  "wifi": 2,
+  "airplaneMode": false,
+  "startLocked": false,
+  "notifications": [],
+  "sceneType": "call",
+  "sceneContact": "jodi",
+  "callDir": "incoming",
+  "callOutcome": "answered",
+  "callDuration": null,
+  "proximityBlank": "gesture"
+}
