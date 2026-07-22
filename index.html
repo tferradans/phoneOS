@@ -6378,33 +6378,50 @@ function textFieldFocused() {
 if (window.visualViewport) {
   const vv = window.visualViewport;
   let kbRaf = null;
+  /* Height of the layout box (ICB) with no keyboard up — the baseline we
+     compare against to tell which kind of browser reaction we're seeing.
+     Re-sampled whenever no text field is focused, so entering fullscreen
+     or gaining/losing the cutout row re-bases it. */
+  let icbRest = document.documentElement.clientHeight;
+
   function applyKb() {
     kbRaf = null;
-    /* Measure against the ICB — documentElement.clientHeight — NOT
-       window.innerHeight. The screens are position:fixed, so the ICB is
-       the box their `bottom` actually resolves against, and it's the
-       only reference that stays honest across the two ways a browser
-       can react to a keyboard:
-         iOS      layout viewport unchanged, page panned → ICB stays
-                  full, kb = the real overlap, screens lift.
-         Android  interactive-widget=resizes-content shrinks the ICB
-                  itself → the screens are already above the keyboard
-                  and this arithmetic yields ~0, as it should.
-       Measuring from innerHeight got the second case wrong: it stayed
-       full-height while the ICB shrank, so --kb subtracted the keyboard
-       a second time and left a band of body-black above it. That band
-       was there all along — the overflowing input row used to paint
-       over it, which is why it only surfaced once the layout was fixed. */
     const icb = document.documentElement.clientHeight;
-    const kb = Math.max(0, Math.min(icb, icb - vv.height - vv.offsetTop));
+    if (!textFieldFocused()) icbRest = icb;
+
+    /* Two things a browser can do when the keyboard opens, and they need
+       OPPOSITE responses — so detect which one happened instead of
+       trusting any single number:
+
+       A. It shrinks the layout box itself (Android Chrome, from
+          interactive-widget=resizes-content). The fixed-position screens
+          are then ALREADY sitting above the keyboard and want no lift at
+          all. Chrome still reports a visualViewport height a further
+          keyboard-height smaller, so the old arithmetic subtracted the
+          keyboard a SECOND time — that was the band of body-black above
+          the keyboard, and why it scaled with keyboard size (bigger on a
+          Pixel 7 than an S8). When the box shrank, trust the box.
+
+       B. It leaves the layout box alone and pans the page (iOS). Nothing
+          moved on its own, so we lift the screens by the real overlap.
+
+       The shrink itself is the discriminator, and it's unambiguous: a
+       keyboard is hundreds of px, while the only other thing that
+       resizes this window (the cutout row on a fullscreen transition) is
+       capped at 80. */
+    const shrunk = icbRest - icb;
+    const kb = shrunk > 100 ? 0
+             : Math.max(0, Math.min(icb, icb - vv.height - vv.offsetTop));
+
     document.documentElement.style.setProperty('--kb', kb + 'px');
-    /* On Android the lift is 0 by design (see above), so the class can't
-       be derived from kb alone — focus is the signal that works on both. */
+    /* In case A the lift is 0 by design, so the class can't be derived
+       from kb alone — focus is the signal that holds on both platforms. */
     document.documentElement.classList.toggle('kb-open', kb > 60 || textFieldFocused());
     if (window.scrollY || vv.offsetTop) window.scrollTo(0, 0);
     // keep an open message thread pinned to its newest bubble
     const thread = document.querySelector('#screen-text:not(.hidden) .text-thread');
     if (thread) thread.scrollTop = thread.scrollHeight;
+    if (kbDiag) kbDiag(icb, icbRest, shrunk, kb);
   }
   function queueKb() { if (!kbRaf) kbRaf = requestAnimationFrame(applyKb); }
   vv.addEventListener('resize', queueKb);
@@ -6412,6 +6429,37 @@ if (window.visualViewport) {
   // focus/blur fire before the viewport settles — catch both edges
   document.addEventListener('focusin', queueKb);
   document.addEventListener('focusout', () => setTimeout(queueKb, 50));
+
+  /* ── ?kbdiag=1 — live viewport readout ─────────────────────────────
+     Pinned to the top of the screen, which stays visible with the
+     keyboard up. Off unless the param is present, so it can never
+     appear on set. Read it off the phone if a gap ever comes back:
+     it prints what the device actually reports, which is the one thing
+     this file can't find out for itself. */
+  var kbDiag = null;
+  if (new URLSearchParams(location.search).has('kbdiag')) {
+    const box = document.createElement('div');
+    box.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99999;' +
+      'background:rgba(0,120,0,0.92);color:#fff;font:11px/1.45 monospace;' +
+      'padding:6px 8px;white-space:pre;pointer-events:none;';
+    document.body.appendChild(box);
+    kbDiag = (icb, rest, shrunk, kb) => {
+      /* #phone-chrome carries .screen too and is pinned to inset:0 — it
+         would always report the full height and hide the very gap this
+         readout exists to measure. */
+      const sc = document.querySelector('.screen:not(.hidden):not(.invisible):not(#phone-chrome)');
+      const row = document.querySelector('.text-input-row');
+      box.textContent =
+        'inner ' + window.innerHeight + '  icb ' + icb + '  rest ' + rest + '\n' +
+        'vv.h ' + Math.round(vv.height) + '  vv.top ' + Math.round(vv.offsetTop) +
+        '  screen ' + screen.height + '\n' +
+        'shrunk ' + shrunk + ' → --kb ' + kb + '  (case ' + (shrunk > 100 ? 'A' : 'B') + ')\n' +
+        'screenBottom ' + (sc ? Math.round(sc.getBoundingClientRect().bottom) : '–') +
+        '  inputBottom ' + (row ? Math.round(row.getBoundingClientRect().bottom) : '–') + '\n' +
+        'fs ' + (document.fullscreenElement ? 'yes' : 'no') +
+        '  focus ' + (textFieldFocused() ? 'field' : 'none');
+    };
+  }
 }
 
 /* ============================================================
