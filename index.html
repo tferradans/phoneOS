@@ -6390,6 +6390,44 @@ if (window.visualViewport) {
 }
 
 /* ============================================================
+   ?kbdiag=1 — on-device viewport readout
+   For chasing keyboard/fullscreen fights per device. PERSISTS on the
+   device (an installed launch can't carry URL params, so the flag has
+   to survive the relaunch): kbdiag=1 turns it on, kbdiag=0 turns it
+   off. NEVER leave it on for a shoot day.
+============================================================ */
+(function () {
+  const KD = 'phoneOS_kbdiag';
+  const q = new URLSearchParams(location.search).get('kbdiag');
+  if (q === '1') localStorage.setItem(KD, '1');
+  else if (q === '0') localStorage.removeItem(KD);
+  if (localStorage.getItem(KD) !== '1') return;
+  const box = document.createElement('div');
+  box.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99999;' +
+    'background:rgba(0,120,0,0.92);color:#fff;font:11px/1.45 monospace;' +
+    'padding:6px 8px;white-space:pre;pointer-events:none;';
+  document.body.appendChild(box);
+  function upd() {
+    const a = document.activeElement;
+    const mode = ['fullscreen', 'standalone', 'minimal-ui']
+      .find(m => matchMedia('(display-mode: ' + m + ')').matches) || 'browser';
+    box.textContent =
+      'inner ' + window.innerHeight + '  vv.h ' +
+      (window.visualViewport ? Math.round(window.visualViewport.height) : '–') +
+      '  screen ' + screen.height + '\n' +
+      'mode ' + mode + '  fsAPI ' + (document.fullscreenElement ? 'yes' : 'no') +
+      '  rescue ' + (localStorage.getItem('phoneOS_immersive') === 'off' ? 'OFF' : 'armed') + '\n' +
+      'letterbox ' + (screen.height - window.innerHeight) + 'px  --kb ' +
+      (getComputedStyle(document.documentElement).getPropertyValue('--kb').trim() || '0px') +
+      '  focus ' + (a && (a.tagName === 'INPUT' || a.tagName === 'TEXTAREA') ? 'field' : 'none');
+  }
+  // polled, not event-driven: this must keep reporting through the very
+  // transitions (fullscreen, IME) whose events are the thing in question
+  setInterval(upd, 250);
+  upd();
+})();
+
+/* ============================================================
    iOS INSTALLS — the system status bar can't be hidden and always
    draws over the app, so the fake bar would double the clock. Flag
    the document; CSS collapses the fake bar to a tone strip. Only
@@ -6416,6 +6454,20 @@ if (window.visualViewport) {
 ============================================================ */
 (function () {
   if (!document.documentElement.requestFullscreen) return;
+  /* Per-device kill-switch: open any URL once with ?immersive=off and
+     the rescue stays off on this device (?immersive=on re-arms it).
+     Persisted — a WebAPK install shares the origin's localStorage with
+     Chrome tabs, so the flag can be set from a browser tab and the
+     installed app sees it on its next launch. Exists because immersive
+     mode and the soft keyboard fight on some installs: with the IME up,
+     Android pops the system bars back OVER an immersive window. Turning
+     the rescue off trades a cutout-row letterbox at the top for a
+     keyboard that never drags system chrome in. */
+  const IMM = 'phoneOS_immersive';
+  const immQ = new URLSearchParams(location.search).get('immersive');
+  if (immQ === 'off') localStorage.setItem(IMM, 'off');
+  else if (immQ === 'on') localStorage.removeItem(IMM);
+  if (localStorage.getItem(IMM) === 'off') return;
   let pending = false;
   let lbH = 0;   // window height while letterboxed — the estimation baseline
   function typing() {
@@ -6427,10 +6479,17 @@ if (window.visualViewport) {
            !document.fullscreenElement &&
            (screen.height - window.innerHeight > 8 || screen.width - window.innerWidth > 8);
   }
-  window.addEventListener('pointerup', () => {
+  window.addEventListener('pointerup', (e) => {
     // typing guard: an open soft keyboard also shrinks the window —
     // don't mistake it for letterboxing (and never yank the keyboard)
     if (pending || typing() || !letterboxed()) return;
+    /* The tap that PUTS focus in a text field lands here before focus
+       does, so typing() can't see it yet. Claiming fullscreen off that
+       tap races the keyboard Android is about to raise — and an
+       immersive transition + IME is exactly the combination that pops
+       the system bars over the app. Never claim from a tap on a field. */
+    if (e.target && e.target.closest &&
+        e.target.closest('input, textarea, [contenteditable]')) return;
     pending = true;
     lbH = window.innerHeight;
     document.documentElement.requestFullscreen({ navigationUI: 'hide' })
