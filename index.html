@@ -394,6 +394,31 @@
   }
   #screen-prox.on { opacity: 1; pointer-events: auto; }
 
+  /* ?proxdebug calibration readout — sits at the BOTTOM, because the
+     whole point is that the top is where the ear lands. Above the
+     blank so it stays readable while the screen is "off". */
+  #prox-debug {
+    position: fixed; left: 8px; right: 8px; bottom: 8px;
+    z-index: 700;
+    background: rgba(0,0,0,0.86); color: #6f6;
+    border: 1px solid #2a2; border-radius: 8px;
+    padding: 8px 10px;
+    font-family: ui-monospace, Menlo, Consolas, monospace;
+    font-size: 12px; line-height: 1.45;
+    white-space: pre;
+  }
+  #prox-debug .pd-out {
+    color: #ff9; border-top: 1px solid #333;
+    margin-top: 6px; padding-top: 6px;
+  }
+  #prox-debug .pd-go {
+    display: block; width: 100%; margin-top: 8px;
+    padding: 12px; border: 0; border-radius: 6px;
+    background: #2a2; color: #fff;
+    font-family: inherit; font-size: 13px; font-weight: 700;
+  }
+  #prox-debug .pd-go:disabled { background: #555; }
+
   /* wallpaper layer — sits behind everything */
   #wallpaper {
     position: absolute;
@@ -5214,6 +5239,17 @@ const PROX_GAMMA_MIN  = 25;   // deg — ...and rolled over onto the ear
 const PROX_TOUCH_R    = 30;   // px  — contact patch bigger than a fingertip
 const PROX_HOLD_MS    = 400;  // pose must persist this long before blanking
 const PROX_RELEASE_MS = 150;  // ...and clear this long before waking
+
+/* INPUT GUARD — deliberately more trigger-happy than the blank itself.
+   Blanking should be conservative (a false blank ruins a take); input
+   suppression should be paranoid (a false hidden-gesture ALSO ruins a
+   take, and suppressing a touch costs nothing). So the guard trips on
+   a lower bar, trips INSTANTLY rather than after PROX_HOLD_MS, and
+   lingers PROX_TAIL_MS after everything clears — the ear dragging off
+   the glass is exactly when stray taps land. */
+const PROX_GUARD_R    = 22;   // px  — anything fatter than a fingertip
+const PROX_GUARD_PTS  = 2;    // an ear lands several points; a finger doesn't
+const PROX_TAIL_MS    = 700;  // keep swallowing this long after contact clears
 const PROX_DARK_ENTER = 8;    // camera: mean luma 0–255 to call it occluded
 const PROX_DARK_EXIT  = 25;   // camera: hysteresis, stay blanked longer
 const PROX_FLAT_MAX   = 6;    // camera: luma spread — a dark ROOM still has detail
@@ -5225,9 +5261,29 @@ const PROX_FLAT_MAX   = 6;    // camera: luma spread — a dark ROOM still has d
    the same reason: a rig's clicks can never trip it. */
 const PROX_DISABLED = new URLSearchParams(location.search).has('noprox');
 
+/* ?proxdebug — live sensor readout + a 2-second capture, so the
+   thresholds above come from THIS handset and a real actor's hold
+   instead of from a guess. Run it twice: once holding the phone the
+   way the actor reads it, once with it at the ear. The gap between
+   the two captures is where the threshold goes. Debug only; it draws
+   over the blank on purpose so it stays readable. */
+const PROX_DEBUG = new URLSearchParams(location.search).has('proxdebug');
+
 const Prox = {
   armed: false, blanked: false, mode: 'off',
   _el: null, _src: {}, _hold: null, _rel: null, _stop: [],
+  _contact: false, _tailUntil: 0,
+
+  /* THE thing the rest of the app asks about. Every hidden operator
+     gesture (long-press menu, double-tap restart, double-tap dialer)
+     must check this — the overlay alone does NOT stop them, because
+     those handlers live on #phone-chrome, an ANCESTOR of #screen-prox,
+     so cheek touches bubble right up to them. pointer-events changes
+     the target, not the propagation path. */
+  get guarding() {
+    return this.armed &&
+           (this.blanked || this._contact || Date.now() < this._tailUntil);
+  },
 
   /* mode comes straight off the merged cfg; anything falsy = off */
   arm(mode) {
@@ -5240,6 +5296,7 @@ const Prox = {
     else                   this._startGesture();
     this._startTouch();    // cheek contact is useful in BOTH modes
     this._startManual();
+    if (PROX_DEBUG) this._startDebug();
   },
 
   disarm() {
@@ -5248,6 +5305,8 @@ const Prox = {
     this._stop.forEach(fn => { try { fn(); } catch (e) { console.warn('prox teardown:', e); } });
     this._stop = [];
     this._src = {};
+    this._contact = false;
+    this._tailUntil = 0;
     this.armed = false;
     this.mode = 'off';
     this._paint(false);
@@ -5274,6 +5333,9 @@ const Prox = {
 
   _paint(on) {
     this.blanked = on;
+    // Waking is the riskiest moment for a stray tap — the ear is still
+    // dragging across the glass. Hold the guard open past the wake.
+    if (!on) this._tailUntil = Date.now() + PROX_TAIL_MS;
     if (!this._el) this._el = document.getElementById('screen-prox');
     if (this._el) this._el.classList.toggle('on', on);
   },
@@ -5310,10 +5372,19 @@ const Prox = {
      rejection eating the contact before the browser sees it — that's
      the one thing to check on the prop handset. */
   _startTouch() {
-    const big = t => (t.radiusX || 0) > PROX_TOUCH_R || (t.radiusY || 0) > PROX_TOUCH_R;
+    const r = t => Math.max(t.radiusX || 0, t.radiusY || 0);
     const read = e => {
-      const ts = e.touches || [];
-      this._set('cheek', ts.length >= 3 || Array.prototype.some.call(ts, big));
+      const ts = Array.prototype.slice.call(e.touches || []);
+      const widest = ts.reduce((m, t) => Math.max(m, r(t)), 0);
+
+      // Guard first, and on the lower bar — the instant anything
+      // non-fingertip is on the glass, the hidden gestures are off.
+      const contact = ts.length >= PROX_GUARD_PTS || widest > PROX_GUARD_R;
+      if (this._contact && !contact) this._tailUntil = Date.now() + PROX_TAIL_MS;
+      this._contact = contact;
+
+      // Blanking keeps the stricter bar.
+      this._set('cheek', ts.length >= 3 || widest > PROX_TOUCH_R);
     };
     ['touchstart', 'touchmove', 'touchend', 'touchcancel']
       .forEach(ev => this._on(document, ev, read, { passive: true }));
@@ -5327,6 +5398,77 @@ const Prox = {
     const hit = e => (e.key === 'p' || e.key === 'P');
     this._on(window, 'keydown', e => { if (hit(e)) this._set('manual', true); });
     this._on(window, 'keyup',   e => { if (hit(e)) this._set('manual', false); });
+  },
+
+  /* ── Calibration readout (?proxdebug) ──
+     Reports the three candidate discriminators side by side:
+       beta/gamma  the two thresholds in use now
+       nz          cos(beta)·cos(gamma) — the screen-normal's vertical
+                   component. ONE number instead of two, and it doesn't
+                   care which ear or which hand, which is why it may
+                   turn out to be the better discriminator.
+       pts/width   what the touch source actually sees from a cheek
+     CAPTURE gives 3s to get into position, then medians 2s of samples. */
+  _startDebug() {
+    const box = document.createElement('div');
+    box.id = 'prox-debug';
+    box.innerHTML = '<div class="pd-live"></div><div class="pd-out">— no capture yet —</div>' +
+                    '<button class="pd-go">CAPTURE (3s → hold pose)</button>';
+    document.body.appendChild(box);
+    const live = box.querySelector('.pd-live');
+    const out  = box.querySelector('.pd-out');
+    const btn  = box.querySelector('.pd-go');
+
+    const S = { beta: 0, gamma: 0, nz: 0, pts: 0, width: 0 };
+    const D = Math.PI / 180;
+    const onOri = e => {
+      if (e.beta == null) return;
+      S.beta = e.beta; S.gamma = e.gamma || 0;
+      S.nz = Math.cos(S.beta * D) * Math.cos(S.gamma * D);
+    };
+    const onTouch = e => {
+      const ts = Array.prototype.slice.call(e.touches || []);
+      S.pts = ts.length;
+      S.width = ts.reduce((m, t) => Math.max(m, t.radiusX || 0, t.radiusY || 0), 0);
+    };
+    this._on(window, 'deviceorientation', onOri);
+    ['touchstart', 'touchmove', 'touchend', 'touchcancel']
+      .forEach(ev => this._on(document, ev, onTouch, { passive: true }));
+
+    let grab = null;
+    const draw = () => {
+      live.textContent =
+        `beta ${S.beta.toFixed(0).padStart(4)}  gamma ${S.gamma.toFixed(0).padStart(4)}  nz ${S.nz.toFixed(2)}\n` +
+        `touch pts ${S.pts}  widest ${S.width.toFixed(0)}px\n` +
+        `blank ${this.blanked ? 'ON ' : 'off'}   guard ${this.guarding ? 'ON' : 'off'}`;
+      if (grab) grab.push({ beta: S.beta, gamma: S.gamma, nz: S.nz, width: S.width, pts: S.pts });
+    };
+    const iv = setInterval(draw, 100);
+    this._stop.push(() => { clearInterval(iv); box.remove(); });
+
+    const med = (a, k) => {
+      const v = a.map(x => x[k]).sort((p, q) => p - q);
+      return v.length ? v[Math.floor(v.length / 2)] : 0;
+    };
+    btn.addEventListener('click', () => {
+      let n = 3;
+      btn.disabled = true;
+      const tick = setInterval(() => {
+        btn.textContent = n > 0 ? `get into position… ${n}` : 'SAMPLING…';
+        if (n-- > 0) return;
+        clearInterval(tick);
+        grab = [];
+        setTimeout(() => {
+          const g = grab; grab = null;
+          out.textContent =
+            `median of ${g.length} samples\n` +
+            `beta ${med(g,'beta').toFixed(0)}   gamma ${med(g,'gamma').toFixed(0)}   nz ${med(g,'nz').toFixed(2)}\n` +
+            `widest ${med(g,'width').toFixed(0)}px   pts ${med(g,'pts')}`;
+          btn.disabled = false;
+          btn.textContent = 'CAPTURE (3s → hold pose)';
+        }, 2000);
+      }, 1000);
+    });
   },
 
   /* ── Source: front-camera occlusion ──
@@ -5404,6 +5546,7 @@ MODULES.phone = {
     const callEl = document.getElementById('screen-call');
     let dTap = 0;
     ctx.listen(callEl, 'click', e => {
+      if (Prox.guarding) { dTap = 0; return; }   // cheek on the left of a live call
       if (!callEl.classList.contains('call-connected')) return;
       if (e.target.closest('button, .call-card')) return;
       const r = callEl.getBoundingClientRect();
@@ -6103,6 +6246,7 @@ function inTopLeft(clientX, clientY) {
 }
 
 function lpStart(x, y) {
+  if (Prox.guarding) return;   // an ear resting on the top-left corner is not a long press
   if (!phoneIsActive() || !inTopLeft(x, y)) return;
   lpTimer = setTimeout(() => { lpTimer = null; goToSceneMenu(); }, LP_MS);
 }
@@ -6134,6 +6278,9 @@ function inTopStrip(clientY) {
 }
 
 phoneChromeEl.addEventListener('touchend', e => {
+  // The top strip is precisely where an ear lands. Two cheek contacts
+  // in 350ms is not an operator asking for a restart.
+  if (Prox.guarding) { lastTapTime = 0; return; }
   if (!phoneIsActive() || !inTopStrip(e.changedTouches[0].clientY)) return;
   const now = Date.now();
   if (now - lastTapTime < DT_MS) { e.preventDefault(); restartScene(); lastTapTime = 0; }
@@ -6141,6 +6288,7 @@ phoneChromeEl.addEventListener('touchend', e => {
 }, { passive: false });
 
 phoneChromeEl.addEventListener('dblclick', e => {
+  if (Prox.guarding) return;
   if (!phoneIsActive() || !inTopStrip(e.clientY)) return;
   restartScene();
 });
