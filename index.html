@@ -1212,9 +1212,18 @@
   .text-hdr-btn svg { width: 22px; height: 22px; fill: var(--msg-action); }
   .text-hdr-btn.dots svg { width: 4px; }
 
-  /* Thread */
+  /* Thread
+     flex: 0 1 auto (+ min-height:0) is load-bearing, not tidiness: the
+     thread is the ONLY row in this column that may give. When the soft
+     keyboard lifts the screen's bottom edge (--kb, or a layout viewport
+     that Android shrank for us), a non-shrinkable thread pushes the
+     input row straight off the bottom and under the keyboard — worst on
+     short/short-ish screens (iPhone SE, Galaxy S8), where 70vh alone
+     already exceeds what's left. min-height:0 is what actually lets a
+     flex item with overflow-y shrink below its content. */
   .text-thread {
-    flex-shrink: 0;
+    flex: 0 1 auto;
+    min-height: 0;
     max-height: calc(70vh - var(--status-height) - 52px);
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
@@ -1286,7 +1295,7 @@
   /* Input row */
   .text-input-row {
     flex-shrink: 0;
-    padding: 8px 12px 30px;
+    padding: 8px 12px 30px;   /* bottom pad = home-indicator room */
     border-top: 1px solid var(--msg-line);
     background: var(--msg-bar);
     display: flex;
@@ -1339,6 +1348,10 @@
     -webkit-tap-highlight-color: transparent;
     margin-bottom: 3px;
   }
+  /* Keyboard up: the keyboard covers the home indicator, so that bottom
+     pad is 30px of stolen thread on a short screen — give it back. */
+  html.kb-open .text-input-row { padding-bottom: 8px; }
+
   .text-send-btn.ready { opacity: 1; }
   .text-send-btn svg { width: 16px; height: 16px; fill: var(--msg-bubble-me-ink); }
 
@@ -6354,6 +6367,14 @@ async function checkUrlParams() {
    as --kb (screens lift their bottom edge above it), and undo the
    browser's pan so the top chrome never moves.
 ============================================================ */
+/* Is a text field focused? Used by the keyboard and fullscreen code —
+   the soft keyboard shrinks the window exactly like letterboxing does,
+   so anything measuring the window has to know which one it's seeing. */
+function textFieldFocused() {
+  const a = document.activeElement;
+  return !!a && (a.tagName === 'INPUT' || a.tagName === 'TEXTAREA' || a.isContentEditable);
+}
+
 if (window.visualViewport) {
   const vv = window.visualViewport;
   let kbRaf = null;
@@ -6361,6 +6382,11 @@ if (window.visualViewport) {
     kbRaf = null;
     const kb = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
     document.documentElement.style.setProperty('--kb', kb + 'px');
+    /* Android (interactive-widget=resizes-content) shrinks the LAYOUT
+       viewport instead, so the fixed screens already sit above the
+       keyboard and --kb reads 0 — the class can't be derived from kb
+       alone. Focus is the reliable signal on both platforms. */
+    document.documentElement.classList.toggle('kb-open', kb > 60 || textFieldFocused());
     if (window.scrollY || vv.offsetTop) window.scrollTo(0, 0);
     // keep an open message thread pinned to its newest bubble
     const thread = document.querySelector('#screen-text:not(.hidden) .text-thread');
@@ -6369,6 +6395,9 @@ if (window.visualViewport) {
   function queueKb() { if (!kbRaf) kbRaf = requestAnimationFrame(applyKb); }
   vv.addEventListener('resize', queueKb);
   vv.addEventListener('scroll', queueKb);
+  // focus/blur fire before the viewport settles — catch both edges
+  document.addEventListener('focusin', queueKb);
+  document.addEventListener('focusout', () => setTimeout(queueKb, 50));
 }
 
 /* ============================================================
@@ -6400,25 +6429,44 @@ if (window.visualViewport) {
   if (!document.documentElement.requestFullscreen) return;
   let pending = false;
   let lbH = 0;   // window height while letterboxed — the estimation baseline
-  function typing() {
-    const a = document.activeElement;
-    return a && (a.tagName === 'INPUT' || a.tagName === 'TEXTAREA' || a.isContentEditable);
+  const typing = textFieldFocused;
+  /* Installed shell (either display mode), never a browser tab.
+     standalone counts on purpose: a WebAPK generated before the manifest
+     said "fullscreen" keeps reporting standalone until the phone is
+     re-installed, and those are exactly the devices sitting on a system
+     nav bar. In a real browser tab we leave the window alone — that's
+     the authoring preview. */
+  function installed() {
+    return matchMedia('(display-mode: fullscreen), (display-mode: standalone)').matches;
   }
+  /* Window smaller than the screen = system chrome (cutout letterbox or
+     nav bar) is eating rows we're supposed to own. */
   function letterboxed() {
-    return matchMedia('(display-mode: fullscreen)').matches &&
-           !document.fullscreenElement &&
+    return installed() && !document.fullscreenElement &&
            (screen.height - window.innerHeight > 8 || screen.width - window.innerWidth > 8);
   }
-  window.addEventListener('pointerup', () => {
+  function claim() {
     // typing guard: an open soft keyboard also shrinks the window —
     // don't mistake it for letterboxing (and never yank the keyboard)
     if (pending || typing() || !letterboxed()) return;
     pending = true;
-    lbH = window.innerHeight;
+    /* Only feed the cutout estimator from a display-mode:fullscreen
+       shell. There the nav bar is already gone, so the height we gain
+       is the cutout row and nothing else. Under standalone the gain is
+       mostly nav bar — measuring it would pad the TOP of the screen by
+       the height of a bar at the BOTTOM. */
+    lbH = matchMedia('(display-mode: fullscreen)').matches ? window.innerHeight : 0;
     document.documentElement.requestFullscreen({ navigationUI: 'hide' })
       .catch(() => {})
       .finally(() => { pending = false; });
-  }, { capture: true, passive: true });
+  }
+  window.addEventListener('pointerup', claim, { capture: true, passive: true });
+  /* Showing the soft keyboard drops the app out of fullscreen on several
+     Androids, and the nav bar it brings back stays back — the tap that
+     dismissed the keyboard can't re-claim it, because at pointerup the
+     field is still focused. Retry once the field blurs, while that tap's
+     user activation is still live. */
+  document.addEventListener('focusout', () => setTimeout(claim, 300));
 
   /* Some devices extend into the cutout but still report an
      env(safe-area-inset-top) of 0, leaving the status icons under the
