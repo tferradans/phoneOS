@@ -6466,7 +6466,13 @@ if (window.visualViewport) {
         'screenBottom ' + (sc ? Math.round(sc.getBoundingClientRect().bottom) : '–') +
         '  inputBottom ' + (row ? Math.round(row.getBoundingClientRect().bottom) : '–') + '\n' +
         'fs ' + (document.fullscreenElement ? 'yes' : 'no') +
-        '  focus ' + (textFieldFocused() ? 'field' : 'none');
+        '  focus ' + (textFieldFocused() ? 'field' : 'none') +
+        /* display-MODE is the Pixel-vs-Galaxy tell: "fullscreen" = the
+           WebAPK honoured the manifest and the browser owns the keyboard
+           natively (good); "standalone" = a stale WebAPK still showing a
+           nav bar → reinstall the home-screen icon to regenerate it. */
+        '  mode ' + (['fullscreen','standalone','minimal-ui']
+          .find(m => matchMedia('(display-mode: ' + m + ')').matches) || 'browser');
     };
   }
 }
