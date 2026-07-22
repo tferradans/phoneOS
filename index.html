@@ -1357,10 +1357,6 @@
     -webkit-tap-highlight-color: transparent;
     margin-bottom: 3px;
   }
-  /* Keyboard up: the keyboard covers the home indicator, so that bottom
-     pad is 30px of stolen thread on a short screen — give it back. */
-  html.kb-open .text-input-row { padding-bottom: 8px; }
-
   .text-send-btn.ready { opacity: 1; }
   .text-send-btn svg { width: 16px; height: 16px; fill: var(--msg-bubble-me-ink); }
 
@@ -6376,105 +6372,21 @@ async function checkUrlParams() {
    as --kb (screens lift their bottom edge above it), and undo the
    browser's pan so the top chrome never moves.
 ============================================================ */
-/* Is a text field focused? Used by the keyboard and fullscreen code —
-   the soft keyboard shrinks the window exactly like letterboxing does,
-   so anything measuring the window has to know which one it's seeing. */
-function textFieldFocused() {
-  const a = document.activeElement;
-  return !!a && (a.tagName === 'INPUT' || a.tagName === 'TEXTAREA' || a.isContentEditable);
-}
-
 if (window.visualViewport) {
   const vv = window.visualViewport;
   let kbRaf = null;
-  /* Height of the layout box (ICB) with no keyboard up — the baseline we
-     compare against to tell which kind of browser reaction we're seeing.
-     Re-sampled whenever no text field is focused, so entering fullscreen
-     or gaining/losing the cutout row re-bases it. */
-  let icbRest = document.documentElement.clientHeight;
-
   function applyKb() {
     kbRaf = null;
-    const icb = document.documentElement.clientHeight;
-    if (!textFieldFocused()) icbRest = icb;
-
-    /* Two things a browser can do when the keyboard opens, and they need
-       OPPOSITE responses — so detect which one happened instead of
-       trusting any single number:
-
-       A. It shrinks the layout box itself (Android Chrome, from
-          interactive-widget=resizes-content). The fixed-position screens
-          are then ALREADY sitting above the keyboard and want no lift at
-          all. Chrome still reports a visualViewport height a further
-          keyboard-height smaller, so the old arithmetic subtracted the
-          keyboard a SECOND time — that was the band of body-black above
-          the keyboard, and why it scaled with keyboard size (bigger on a
-          Pixel 7 than an S8). When the box shrank, trust the box.
-
-       B. It leaves the layout box alone and pans the page (iOS). Nothing
-          moved on its own, so we lift the screens by the real overlap.
-
-       The shrink itself is the discriminator, and it's unambiguous: a
-       keyboard is hundreds of px, while the only other thing that
-       resizes this window (the cutout row on a fullscreen transition) is
-       capped at 80. */
-    const shrunk = icbRest - icb;
-    const kb = shrunk > 100 ? 0
-             : Math.max(0, Math.min(icb, icb - vv.height - vv.offsetTop));
-
+    const kb = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
     document.documentElement.style.setProperty('--kb', kb + 'px');
-    /* In case A the lift is 0 by design, so the class can't be derived
-       from kb alone — focus is the signal that holds on both platforms. */
-    document.documentElement.classList.toggle('kb-open', kb > 60 || textFieldFocused());
     if (window.scrollY || vv.offsetTop) window.scrollTo(0, 0);
     // keep an open message thread pinned to its newest bubble
     const thread = document.querySelector('#screen-text:not(.hidden) .text-thread');
     if (thread) thread.scrollTop = thread.scrollHeight;
-    if (kbDiag) kbDiag(icb, icbRest, shrunk, kb);
   }
   function queueKb() { if (!kbRaf) kbRaf = requestAnimationFrame(applyKb); }
   vv.addEventListener('resize', queueKb);
   vv.addEventListener('scroll', queueKb);
-  // focus/blur fire before the viewport settles — catch both edges
-  document.addEventListener('focusin', queueKb);
-  document.addEventListener('focusout', () => setTimeout(queueKb, 50));
-
-  /* ── ?kbdiag=1 — live viewport readout ─────────────────────────────
-     Pinned to the top of the screen, which stays visible with the
-     keyboard up. Off unless the param is present, so it can never
-     appear on set. Read it off the phone if a gap ever comes back:
-     it prints what the device actually reports, which is the one thing
-     this file can't find out for itself. */
-  var kbDiag = null;
-  if (new URLSearchParams(location.search).has('kbdiag')) {
-    const box = document.createElement('div');
-    box.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99999;' +
-      'background:rgba(0,120,0,0.92);color:#fff;font:11px/1.45 monospace;' +
-      'padding:6px 8px;white-space:pre;pointer-events:none;';
-    document.body.appendChild(box);
-    kbDiag = (icb, rest, shrunk, kb) => {
-      /* #phone-chrome carries .screen too and is pinned to inset:0 — it
-         would always report the full height and hide the very gap this
-         readout exists to measure. */
-      const sc = document.querySelector('.screen:not(.hidden):not(.invisible):not(#phone-chrome)');
-      const row = document.querySelector('.text-input-row');
-      box.textContent =
-        'inner ' + window.innerHeight + '  icb ' + icb + '  rest ' + rest + '\n' +
-        'vv.h ' + Math.round(vv.height) + '  vv.top ' + Math.round(vv.offsetTop) +
-        '  screen ' + screen.height + '\n' +
-        'shrunk ' + shrunk + ' → --kb ' + kb + '  (case ' + (shrunk > 100 ? 'A' : 'B') + ')\n' +
-        'screenBottom ' + (sc ? Math.round(sc.getBoundingClientRect().bottom) : '–') +
-        '  inputBottom ' + (row ? Math.round(row.getBoundingClientRect().bottom) : '–') + '\n' +
-        'fs ' + (document.fullscreenElement ? 'yes' : 'no') +
-        '  focus ' + (textFieldFocused() ? 'field' : 'none') +
-        /* display-MODE is the Pixel-vs-Galaxy tell: "fullscreen" = the
-           WebAPK honoured the manifest and the browser owns the keyboard
-           natively (good); "standalone" = a stale WebAPK still showing a
-           nav bar → reinstall the home-screen icon to regenerate it. */
-        '  mode ' + (['fullscreen','standalone','minimal-ui']
-          .find(m => matchMedia('(display-mode: ' + m + ')').matches) || 'browser');
-    };
-  }
 }
 
 /* ============================================================
@@ -6506,61 +6418,25 @@ if (window.visualViewport) {
   if (!document.documentElement.requestFullscreen) return;
   let pending = false;
   let lbH = 0;   // window height while letterboxed — the estimation baseline
-  const typing = textFieldFocused;
-  /* Installed shell (either display mode), never a browser tab.
-     standalone counts on purpose: a WebAPK generated before the manifest
-     said "fullscreen" keeps reporting standalone until the phone is
-     re-installed, and those are exactly the devices sitting on a system
-     nav bar. In a real browser tab we leave the window alone — that's
-     the authoring preview. */
-  function installed() {
-    return matchMedia('(display-mode: fullscreen), (display-mode: standalone)').matches;
+  function typing() {
+    const a = document.activeElement;
+    return a && (a.tagName === 'INPUT' || a.tagName === 'TEXTAREA' || a.isContentEditable);
   }
-  /* Window smaller than the screen = system chrome (cutout letterbox or
-     nav bar) is eating rows we're supposed to own. */
   function letterboxed() {
-    return installed() && !document.fullscreenElement &&
+    return matchMedia('(display-mode: fullscreen)').matches &&
+           !document.fullscreenElement &&
            (screen.height - window.innerHeight > 8 || screen.width - window.innerWidth > 8);
   }
-  function claim() {
+  window.addEventListener('pointerup', () => {
     // typing guard: an open soft keyboard also shrinks the window —
     // don't mistake it for letterboxing (and never yank the keyboard)
     if (pending || typing() || !letterboxed()) return;
     pending = true;
-    /* Only feed the cutout estimator from a display-mode:fullscreen
-       shell. There the nav bar is already gone, so the height we gain
-       is the cutout row and nothing else. Under standalone the gain is
-       mostly nav bar — measuring it would pad the TOP of the screen by
-       the height of a bar at the BOTTOM. */
-    lbH = matchMedia('(display-mode: fullscreen)').matches ? window.innerHeight : 0;
+    lbH = window.innerHeight;
     document.documentElement.requestFullscreen({ navigationUI: 'hide' })
       .catch(() => {})
       .finally(() => { pending = false; });
-  }
-  window.addEventListener('pointerup', claim, { capture: true, passive: true });
-
-  /* ── Fullscreen vs. the soft keyboard ──────────────────────────────
-     The black band above the keyboard was a Fullscreen-API letterbox:
-     resizes-content shrinks the layout box to fit above the keyboard,
-     but the fullscreen element stays full-screen, so Chrome fills the
-     gap with black. There is no CSS cure — a fixed element can't paint
-     outside the layout box, and the strip is system-owned, not canvas.
-     So while a text field is focused we simply LEAVE fullscreen: Android
-     then resizes the real window, the keyboard sits flush against the
-     composer, and the field stays visible (resizes-content keeps it
-     pinned to the box's bottom). The nav bar shows while typing — it
-     already did, Samsung forces it up with the keyboard — and vanishes
-     again on blur when we re-claim. */
-  document.addEventListener('focusin', () => {
-    if (textFieldFocused() && document.fullscreenElement) {
-      document.exitFullscreen().catch(() => {});
-    }
-  });
-  /* Re-claim once the field blurs, while the dismissing tap's user
-     activation is still live (requestFullscreen needs a gesture; exit
-     does not). Also covers the Androids that drop fullscreen on their
-     own when the keyboard opens. */
-  document.addEventListener('focusout', () => setTimeout(claim, 300));
+  }, { capture: true, passive: true });
 
   /* Some devices extend into the cutout but still report an
      env(safe-area-inset-top) of 0, leaving the status icons under the
