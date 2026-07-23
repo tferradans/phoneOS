@@ -5983,12 +5983,19 @@ function buildTextScreen(cfg, ctx) {
   }
 
   /* Touch-offset correction: typing by feel, the thumb occludes the key
-     and its contact centroid lands LOWER than the aim point — real
-     keyboards register the touch a few px higher for exactly this
-     reason (roughly 15% of key height). Without it, natural typing
-     reads one row low and letters bleed into the space bar; with eyes
-     on the keys people aim precisely, which is why "looking helps". */
-  const KBD_TOUCH_BIAS = 7;
+     and its contact centroid lands LOWER than the aim point, so the
+     registered touch is shifted a few px higher. Careful: the OS
+     already applies its own perceived-point correction before reporting
+     coordinates (iOS notably), so this must stay SMALL — 7px stacked on
+     top of the OS's own bias made keystrokes land one key ABOVE.
+     Per-device dial, same pattern as ?immersive: visit once with
+     ?kbdbias=N (0–15, px) and the device remembers; default 2. */
+  const KBD_TOUCH_BIAS = (() => {
+    const q = new URLSearchParams(location.search).get('kbdbias');
+    if (q !== null && q !== '') localStorage.setItem('phoneOS_kbdBias', q);
+    const v = parseFloat(localStorage.getItem('phoneOS_kbdBias'));
+    return isNaN(v) ? 2 : Math.max(0, Math.min(15, v));
+  })();
 
   ctx.listen(kbdEl, 'pointerdown', e => {
     e.preventDefault();               // keep focus + caret in the field
