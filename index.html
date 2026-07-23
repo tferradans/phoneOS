@@ -5982,9 +5982,21 @@ function buildTextScreen(cfg, ctx) {
     return best;
   }
 
+  /* Touch-offset correction: typing by feel, the thumb occludes the key
+     and its contact centroid lands LOWER than the aim point — real
+     keyboards register the touch a few px higher for exactly this
+     reason (roughly 15% of key height). Without it, natural typing
+     reads one row low and letters bleed into the space bar; with eyes
+     on the keys people aim precisely, which is why "looking helps". */
+  const KBD_TOUCH_BIAS = 7;
+
   ctx.listen(kbdEl, 'pointerdown', e => {
     e.preventDefault();               // keep focus + caret in the field
-    const keyEl = e.target.closest('[data-k]') || kbdNearestKey(e.clientX, e.clientY);
+    // toolbar dressing is exact-target; every real key resolves by
+    // BIASED geometry first, raw target only as a last resort
+    const keyEl = e.target.closest('.kbd-toolbar [data-k]')
+               || kbdNearestKey(e.clientX, e.clientY - KBD_TOUCH_BIAS)
+               || e.target.closest('[data-k]');
     if (!keyEl) return;
     keyEl.classList.add('press');
     pressMap.set(e.pointerId, keyEl);
@@ -6000,7 +6012,14 @@ function buildTextScreen(cfg, ctx) {
     } else if (k === 'sym') { kbdLtr.style.display = 'none'; kbdSym.style.display = ''; }
     else if (k === 'abc')  { kbdSym.style.display = 'none'; kbdLtr.style.display = ''; }
     else if (k === 'ret')  { kbdKey('\n'); }   // '\n' = send, matching the IME path
-    else if (k === 'space'){ kbdKey(' '); }
+    else if (k === 'space'){
+      kbdKey(' ');
+      // Gboard behavior: a space after symbols means the symbol run is
+      // over — snap back to the letter layer
+      if (kbdSym.style.display !== 'none') {
+        kbdSym.style.display = 'none'; kbdLtr.style.display = '';
+      }
+    }
     else if (k !== 'noop') {
       const ch = (keyEl.classList.contains('ltr') && kbdShift > 0) ? k.toUpperCase() : k;
       kbdPop(keyEl, ch);
