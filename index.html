@@ -4128,6 +4128,19 @@ MODULES.emailCompose = {
     ctx.listen(el.querySelector('.emc-to'), 'pointerdown', kbd.hide);
     ctx.listen(subjectEl, 'pointerdown', kbd.hide);
 
+    // Reveal rate: 1 char/keypress by default (a message is typed at human
+    // pace, not dumped); composeCharsPerKey can bump it to 2+.
+    const cpk = (typeof cfg.composeCharsPerKey === 'number' && cfg.composeCharsPerKey >= 1)
+      ? cfg.composeCharsPerKey : 1;
+    // Pre-typed head: composePrefillLines leading lines of the body are
+    // already in the field when the scene opens; typing continues from there.
+    let prefillChars = 0;
+    const prefillLines = (typeof cfg.composePrefillLines === 'number' && cfg.composePrefillLines > 0)
+      ? cfg.composePrefillLines : 0;
+    if (prefillLines > 0 && cfg.composeBody) {
+      prefillChars = String(cfg.composeBody).split('\n').slice(0, prefillLines).join('\n').length;
+    }
+
     // Body is the one typed field. Settings auto-type OFF → the actor types
     // and composeBody reveals (approved text appears whatever keys they hit);
     // ON → the phone types it itself. Return inserts a newline (multi-line
@@ -4136,6 +4149,8 @@ MODULES.emailCompose = {
       script: cfg.composeBody,
       grows: true,
       submitOnNewline: false,
+      charsPerKey: cpk,
+      initialReveal: prefillChars,
     });
 
     // Send: self-contained confirmation, no scene hop
@@ -6211,7 +6226,12 @@ function bindScriptedField(ctx, kbd, field, opts) {
   const script = opts.script
     || (!autoType && opts.deleteDraft ? opts.draftMessage : null)
     || null;
-  const charsPerKey = script ? Math.max(1, Math.ceil(script.length / 40)) : 1;
+  // reveal rate: opts.charsPerKey pins it (compose slows to 1–2 chars per
+  // keypress); otherwise a message reveals fully in ~40 keypresses whatever
+  // its length (messages default — short texts land ~1 char/key already)
+  const charsPerKey = (opts.charsPerKey && opts.charsPerKey >= 1)
+    ? Math.floor(opts.charsPerKey)
+    : (script ? Math.max(1, Math.ceil(script.length / 40)) : 1);
   let pos = 0;
   let animTimer = null;
 
@@ -6221,6 +6241,15 @@ function bindScriptedField(ctx, kbd, field, opts) {
     field.style.height = field.scrollHeight + 'px';
   }
   function ready(r) { if (opts.onReady) opts.onReady(r); }
+
+  // pre-typed head: some scenes open with the first stretch of the script
+  // already in the field (opts.initialReveal chars); typing continues from
+  // there. Only meaningful with a script and the actor-typed path.
+  if (script && opts.initialReveal > 0) {
+    pos = Math.min(opts.initialReveal, script.length);
+    field.value = script.slice(0, pos);
+    autoResize();
+  }
 
   function revealTo(target) {
     if (animTimer) { clearInterval(animTimer); animTimer = null; }
@@ -6476,7 +6505,9 @@ function buildTextScreen(cfg, ctx) {
    goes. Timers run on the scene registry — struck on any transition. */
 function autoTypeInto(inputEl, message, onComplete) {
   const TYPE_MS = 65;
-  let i = 0;
+  // continue from a pre-typed head if the field already holds a prefix of
+  // the message (compose's initialReveal); otherwise type from the start
+  let i = (inputEl.value && message.indexOf(inputEl.value) === 0) ? inputEl.value.length : 0;
   function resize() {
     inputEl.style.height = 'auto';
     inputEl.style.height = inputEl.scrollHeight + 'px';
