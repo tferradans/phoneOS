@@ -1393,9 +1393,12 @@
     transform: translateY(105%);
     transition: transform 0.14s ease-out;
     pointer-events: none;
-    /* fast typing = rapid double-taps; never let the browser read them
-       as a zoom gesture (html's touch-action does not inherit) */
-    touch-action: manipulation;
+    /* the board owns its touches outright: with `none`, the browser can
+       never hesitate over or cancel a fast tap while deciding whether
+       it's a pan/zoom gesture (manipulation still allows pans — and a
+       fast thumb tap almost always carries a little slide). There is
+       nothing to scroll on a keyboard. */
+    touch-action: none;
   }
   .kbd.open { transform: none; pointer-events: auto; }
 
@@ -5961,9 +5964,27 @@ function buildTextScreen(cfg, ctx) {
   }
   function kbdPopHide() { if (popEl) { popEl.remove(); popEl = null; } }
 
+  /* No dead pixels: fast thumbs land in the 2px row gaps, the ASDF-row
+     indents and the board's edge padding constantly — a real keyboard
+     resolves every touch to the nearest key, so we do too. 24px slop
+     cap: anything farther from every key is a genuine non-tap (e.g. a
+     toolbar gap), not a sloppy keypress. */
+  function kbdNearestKey(x, y) {
+    const layer = kbdSym.style.display === 'none' ? kbdLtr : kbdSym;
+    let best = null, bd = 24 * 24;
+    layer.querySelectorAll('.kbd-key').forEach(el => {
+      const r = el.getBoundingClientRect();
+      const dx = Math.max(r.left - x, 0, x - r.right);
+      const dy = Math.max(r.top - y, 0, y - r.bottom);
+      const d = dx * dx + dy * dy;
+      if (d < bd) { bd = d; best = el; }
+    });
+    return best;
+  }
+
   ctx.listen(kbdEl, 'pointerdown', e => {
     e.preventDefault();               // keep focus + caret in the field
-    const keyEl = e.target.closest('[data-k]');
+    const keyEl = e.target.closest('[data-k]') || kbdNearestKey(e.clientX, e.clientY);
     if (!keyEl) return;
     keyEl.classList.add('press');
     pressMap.set(e.pointerId, keyEl);
