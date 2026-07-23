@@ -1,5 +1,5 @@
 {
-  "version": "2026-07-22 11:02:24",
+  "version": "2026-07-23 12:56:50",
   "assets": [
     "./",
     "./index.html",
@@ -58,6 +58,7 @@
     "./font/sf-ui-display-ultralight-58646b19bf205.otf",
     "./chars/aaron_burner.json",
     "./chars/bill.json",
+    "./chars/botanist.json",
     "./chars/clive.json",
     "./chars/ernie.json",
     "./chars/jodi.json",
@@ -73,6 +74,7 @@
     "./chars/vfx.json",
     "./scenes/s200_01_prox.json",
     "./scenes/s203_18.json",
+    "./scenes/s203_37.json",
     "./scenes/s207_103.json",
     "./scenes/s207_11.json",
     "./scenes/s207_110.json",

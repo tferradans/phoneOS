@@ -1820,6 +1820,128 @@
   .eml-act:active { opacity: 0.55; }
   .eml-act svg { width: 17px; height: 17px; fill: var(--eml-action); flex-shrink: 0; }
 
+  /* ── Email compose — module card ─────────────────────────────
+     Mail compose sheet, same family as the email reader (grey
+     header band, accent glyphs, flat white body). Read-only To:
+     row (baked recipients), typeable Subject + Body driven by the
+     shared in-app keyboard; blue Send pill top-right. */
+  #screen-emailcompose {
+    --emc-bg:           #fff;
+    --emc-bar:          #f9f9f9;            /* header band — matches the reader */
+    --emc-line:         rgba(0,0,0,0.12);
+    --emc-ink:          #000;
+    --emc-muted:        #8e8e93;
+    --emc-accent:       var(--accent);      /* Cancel link, caret, Send pill */
+    --emc-send-ink:     #fff;
+    --emc-font-hdr:     calc(17px * var(--font-scale));
+    --emc-font-send:    calc(15px * var(--font-scale));
+    --emc-font-label:   calc(16px * var(--font-scale));
+    --emc-font-field:   calc(17px * var(--font-scale));
+    --emc-font-subject: calc(17px * var(--font-scale));
+    --emc-font-body:    calc(17px * var(--font-scale));
+    --emc-font-sent:    calc(19px * var(--font-scale));
+
+    background: var(--emc-bg);
+    z-index: 8;
+    color: var(--emc-ink);
+  }
+  #phone-chrome[data-screen="screen-emailcompose"] {
+    --sb-bg: #f9f9f9; --sb-ink: #000; --sb-icon-filter: none;
+  }
+  .emc-head {
+    flex-shrink: 0;
+    display: flex; align-items: center; gap: 6px;
+    padding: 6px 8px 8px;
+    background: var(--emc-bar);
+    border-bottom: 1px solid var(--emc-line);
+  }
+  .emc-cancel {
+    display: flex; align-items: center; gap: 3px;
+    border: none; background: none;
+    color: var(--emc-accent); font-family: var(--font-ui);
+    font-size: var(--emc-font-hdr); font-weight: 400;
+    padding: 4px 6px; cursor: pointer; white-space: nowrap;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .emc-cancel svg { width: 11px; height: 19px; }
+  .emc-title {
+    flex: 1; text-align: center;
+    font-family: var(--font-ui); font-size: var(--emc-font-hdr);
+    font-weight: 600; color: var(--emc-ink);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .emc-send {
+    flex-shrink: 0; border: none; border-radius: 999px;
+    background: var(--emc-accent); color: var(--emc-send-ink);
+    font-family: var(--font-ui); font-size: var(--emc-font-send); font-weight: 600;
+    padding: 7px 16px; cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: opacity 0.15s;
+  }
+  .emc-send:active { opacity: 0.55; }
+  .emc-fields {
+    flex: 1; min-height: 0;
+    overflow-y: auto; -webkit-overflow-scrolling: touch;
+  }
+  .emc-row {
+    display: flex; align-items: flex-start; gap: 8px;
+    padding: 11px 18px;
+    border-bottom: 1px solid var(--emc-line);
+  }
+  .emc-label {
+    flex-shrink: 0; color: var(--emc-muted);
+    font-size: var(--emc-font-label); padding-top: 1px;
+  }
+  .emc-to-list {
+    flex: 1; min-width: 0;
+    font-size: var(--emc-font-field); color: var(--emc-ink);
+    line-height: 1.4; word-break: break-word;
+  }
+  /* typeable fields: inputmode="none" — the drawn keyboard is the only
+     typing surface, same contract as the messages compose field */
+  .emc-field {
+    flex: 1; min-width: 0;
+    border: none; outline: none; background: none; resize: none;
+    font-family: var(--font-ui); color: var(--emc-ink);
+    caret-color: var(--emc-accent);
+    padding: 0; margin: 0;
+  }
+  .emc-field::placeholder { color: var(--emc-muted); }
+  .emc-subject {
+    font-size: var(--emc-font-subject); font-weight: 600;
+    line-height: 1.3; height: calc(var(--emc-font-subject) * 1.3);
+    overflow: hidden; white-space: pre;
+  }
+  .emc-body-row { padding: 14px 18px 24px; }
+  .emc-body {
+    display: block; width: 100%; min-height: 220px;
+    border: none; outline: none; background: none; resize: none;
+    font-family: var(--font-ui); font-size: var(--emc-font-body);
+    line-height: 1.5; color: var(--emc-ink);
+    caret-color: var(--emc-accent);
+  }
+  /* self-contained "sent" confirmation — fades over the whole sheet */
+  .emc-sent {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 16px;
+    background: rgba(255,255,255,0.96);
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.25s ease-out;
+    z-index: 5;
+  }
+  .emc-sent.show { opacity: 1; pointer-events: auto; }
+  .emc-sent-check {
+    width: 74px; height: 74px;
+    transform: scale(0.6); transition: transform 0.3s cubic-bezier(0.2,0.9,0.3,1.3);
+  }
+  .emc-sent.show .emc-sent-check { transform: scale(1); }
+  .emc-sent-check svg { width: 100%; height: 100%; fill: var(--emc-accent); }
+  .emc-sent-text {
+    font-family: var(--font-ui); font-size: var(--emc-font-sent);
+    font-weight: 600; color: var(--emc-ink);
+  }
+
   /* ============================================================
      CONTACTS
   ============================================================ */
@@ -2719,8 +2841,6 @@
         <svg viewBox="0 0 24 24"><path d="M4 12l1.41 1.41L11 7.83V20h2V7.83l5.58 5.59L20 12l-8-8-8 8z"/></svg>
       </button>
     </div>
-    <!-- IN-APP KEYBOARD — DOM built by buildKbdDom, wired in buildTextScreen -->
-    <div class="kbd" id="kbd"></div>
   </div>
 
   <!-- DOCS — content built by the docs module -->
@@ -2728,6 +2848,9 @@
 
   <!-- EMAIL — content built by the email module -->
   <div id="screen-email" class="screen hidden"></div>
+
+  <!-- EMAIL COMPOSE — content built by the emailCompose module -->
+  <div id="screen-emailcompose" class="screen hidden"></div>
 
   <!-- CONTACTS — content built by the contacts module -->
   <div id="screen-contacts" class="screen hidden"></div>
@@ -2755,6 +2878,11 @@
 
   <!-- WALLET — content built by the wallet module -->
   <div id="screen-wallet" class="screen hidden"></div>
+
+  <!-- IN-APP KEYBOARD — chrome-level overlay (position:fixed) so it can
+       raise over ANY typing screen (messages, email compose…). DOM built
+       by buildKbdDom, wired per-scene via initKeyboard. -->
+  <div class="kbd" id="kbd"></div>
 
 </div><!-- /phone-chrome -->
 
@@ -3616,6 +3744,7 @@ function launchScene(cfg) {
   if (type === 'contacts') { loadModule('contacts', cfg); return; }
   if (type === 'docs') { loadModule('docs', cfg); return; }
   if (type === 'email') { loadModule('email', cfg); return; }
+  if (type === 'emailcompose') { loadModule('emailCompose', cfg); return; }
   if (type === 'wallet') { loadModule('wallet', cfg); return; }
   if (type === 'map') { loadModule('map', cfg); return; }
 
@@ -3923,6 +4052,111 @@ MODULES.email = {
 
   destroy() {
     wipeScreen('screen-email');
+  }
+};
+
+/* ============================================================
+   EMAIL COMPOSE — module
+   The compose half of the mail app (sceneType "emailcompose").
+   Read-only To: row (baked, cleared recipients — never typeable),
+   typeable Subject + Body driven by the shared in-app keyboard
+   (tap a field to bind the board to it). composeSubject/composeBody
+   ride the same reveal contract as messages: Settings auto-type OFF
+   → the actor types and the scripted text appears; ON → the phone
+   types Subject then Body itself. Send plays a self-contained "sent"
+   confirmation — no scene hop. Back/Cancel returns like the reader.
+============================================================ */
+MODULES.emailCompose = {
+  defaults: { emailApp: 'Inbox', composeTo: [], composeSubject: '', composeBody: '' },
+
+  build(cfg, ctx) {
+    const el = document.getElementById('screen-emailcompose');
+    const to = Array.isArray(cfg.composeTo)
+      ? cfg.composeTo
+      : (cfg.composeTo ? [cfg.composeTo] : []);
+    const toText = to.map(esc).join(', ');
+
+    el.innerHTML = `
+      <div class="emc-head">
+        <button class="emc-cancel" id="emc-cancel">${svgChevronLeft()}${esc(cfg.emailApp)}</button>
+        <div class="emc-title">New Message</div>
+        <button class="emc-send" id="emc-send">Send</button>
+      </div>
+      <div class="emc-fields">
+        <div class="emc-row emc-to">
+          <span class="emc-label">To:</span>
+          <span class="emc-to-list">${toText}</span>
+        </div>
+        <div class="emc-row">
+          <span class="emc-label">Subject:</span>
+          <textarea class="emc-field emc-subject" id="emc-subject" rows="1"
+                    inputmode="none" autocomplete="off" autocorrect="off"
+                    spellcheck="false" placeholder="Subject"></textarea>
+        </div>
+        <div class="emc-body-row">
+          <textarea class="emc-field emc-body" id="emc-body"
+                    inputmode="none" autocomplete="off" autocorrect="off"
+                    spellcheck="false" placeholder="Message"></textarea>
+        </div>
+      </div>
+      <div class="emc-sent" id="emc-sent">
+        <div class="emc-sent-check"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg></div>
+        <div class="emc-sent-text">Message Sent</div>
+      </div>`;
+
+    const subjectEl = el.querySelector('#emc-subject');
+    const bodyEl    = el.querySelector('#emc-body');
+    const sendEl    = el.querySelector('#emc-send');
+
+    // Cancel/back: return where we came from, or the scene menu on direct launch
+    ctx.listen(el.querySelector('#emc-cancel'), 'click', () => {
+      if (cfg._returnCfg) { currentCfg = cfg._returnCfg; launchScene(cfg._returnCfg); }
+      else resetToSetup(cfg);
+    });
+
+    // This compose plays as a reply/forward: To: and Subject are already
+    // filled and static; the keyboard is dedicated to the Body, so every
+    // keystroke types the message. Subject is pre-filled and read-only —
+    // shown in full from the first frame, never typed into.
+    subjectEl.value = cfg.composeSubject || '';
+    subjectEl.setAttribute('readonly', 'true');
+
+    const kbd = initKeyboard(ctx);
+    kbd.bind(bodyEl);
+    ctx.listen(bodyEl, 'focus', () => { kbd.bind(bodyEl); kbd.show(); });
+    // tapping either pre-filled row (To / Subject) dismisses the board
+    ctx.listen(el.querySelector('.emc-to'), 'pointerdown', kbd.hide);
+    ctx.listen(subjectEl, 'pointerdown', kbd.hide);
+
+    // Body is the one typed field. Settings auto-type OFF → the actor types
+    // and composeBody reveals (approved text appears whatever keys they hit);
+    // ON → the phone types it itself. Return inserts a newline (multi-line
+    // message); an empty composeBody just free-types.
+    bindScriptedField(ctx, kbd, bodyEl, {
+      script: cfg.composeBody,
+      grows: true,
+      submitOnNewline: false,
+    });
+
+    // Send: self-contained confirmation, no scene hop
+    let hasSent = false;
+    ctx.listen(sendEl, 'click', () => {
+      if (hasSent) return;
+      hasSent = true;
+      kbd.hide();
+      subjectEl.setAttribute('disabled', 'true');
+      bodyEl.setAttribute('disabled', 'true');
+      sendEl.style.pointerEvents = 'none';
+      el.querySelector('#emc-sent').classList.add('show');
+    });
+
+    showScreen('screen-emailcompose');
+  },
+
+  destroy() {
+    // board chrome is above the screen — strike it too (see messages)
+    closeKeyboardChrome();
+    wipeScreen('screen-emailcompose');
   }
 };
 
@@ -5747,6 +5981,345 @@ function svgCallContacts() {
 /* ============================================================
    TEXT SCREEN
 ============================================================ */
+/* Board chrome (the --kb lift, the html.kbd-open class, the root canvas
+   paint, #kbd.open) lives above every screen, so ctx can't strike it and
+   hiding the screen no longer takes the board down with it. A typing
+   module clears it in destroy() for the case where the board was still up
+   on the way out. Mirrors kbd.hide() minus the per-instance field.blur(). */
+function closeKeyboardChrome() {
+  document.getElementById('kbd').classList.remove('open');
+  document.documentElement.classList.remove('kbd-open');
+  document.documentElement.style.removeProperty('--kb');
+  document.documentElement.style.background = '';
+}
+
+/* ── In-app keyboard — shared controller ──────────────────────
+   One drawn board (#kbd, a chrome-level overlay) that any typing
+   module points at whatever field is active. It speaks to that
+   field the way a hardware keyboard would — mutate field.value,
+   dispatch 'input' — so a field's scripted-reveal logic can't tell
+   the difference. `op` records the last board action ('add'|'del'|
+   null) so a fast tap is never misread as a backspace. Re-created
+   per scene; every listener rides the passed ctx (auto-struck at
+   teardown). Bind a field with kbd.bind(el, {onShow}); raise/lower
+   with kbd.show()/kbd.hide(). Both messages and email compose use it. */
+function initKeyboard(ctx) {
+  const kbdEl = document.getElementById('kbd');
+  buildKbdDom(kbdEl);
+  const kbdLtr = kbdEl.querySelector('.ltr-layer');
+  const kbdSym = kbdEl.querySelector('.sym-layer');
+  // per-scene state reset (the DOM persists across scenes)
+  kbdLtr.style.display = ''; kbdSym.style.display = 'none';
+
+  let field = null;          // the field the board is currently bound to
+  let onShow = null;         // module scroll fixups, run as the board rises
+  let shift = 0;             // 0 off · 1 next-char · 2 caps-lock
+  let lastShiftTap = 0;
+  let bkspHold = null, bkspRep = null, bkspPointer = null, popEl = null;
+  const pressMap = new Map();   // pointerId → key element: two-thumb typing
+                                // means a second finger lands before the
+                                // first lifts, so release is per-pointer
+
+  const kbd = { op: null };
+
+  kbd.bind = function (el, opts) {
+    field = el;
+    onShow = (opts && opts.onShow) || null;
+    autoShift();
+  };
+  kbd.show = function () {
+    if (kbdEl.classList.contains('open')) return;
+    kbdEl.classList.add('open');
+    document.documentElement.classList.add('kbd-open');
+    // lift the screen — the same --kb contract the system keyboard used
+    document.documentElement.style.setProperty('--kb', kbdEl.offsetHeight + 'px');
+    // paint the root canvas to the board colour so the strip the screen
+    // vacates never flashes black behind the 140ms slide-in
+    document.documentElement.style.background = getComputedStyle(kbdEl).backgroundColor;
+    /* flatten iOS focus-side-effects: the page pan (offsets hit targets)
+       and any scroll-reveal inside an overflow:hidden field wrap */
+    window.scrollTo(0, 0);
+    if (field) field.scrollTop = 0;
+    if (onShow) onShow();
+    autoShift();
+  };
+  kbd.hide = function () {
+    if (!kbdEl.classList.contains('open')) return;
+    kbdEl.classList.remove('open');
+    document.documentElement.classList.remove('kbd-open');
+    document.documentElement.style.removeProperty('--kb');
+    document.documentElement.style.background = '';
+    if (field) field.blur();
+  };
+
+  function setShift(n) {
+    shift = n;
+    kbdLtr.classList.toggle('caps', n > 0);
+    kbdEl.querySelector('.kbd-key.shift').classList.toggle('lock', n === 2);
+  }
+  // Gboard autocapitalize: shift arms on an empty field or after
+  // sentence-ending punctuation + space; caps-lock is never overridden
+  function autoShift() {
+    if (shift === 2) return;
+    const v = field ? field.value : '';
+    setShift(v === '' || /[.!?]\s$/.test(v) ? 1 : 0);
+  }
+
+  function key(ch) {
+    if (!field || field.disabled) return;
+    field.value += ch;
+    kbd.op = 'add';   // tell the field's input handler what this was
+    field.dispatchEvent(new Event('input', { bubbles: true }));
+    kbd.op = null;
+    autoShift();
+  }
+  function bksp() {
+    if (!field || field.disabled) return;
+    if (field.value.length) {
+      field.value = field.value.slice(0, -1);
+      kbd.op = 'del';
+      field.dispatchEvent(new Event('input', { bubbles: true }));
+      kbd.op = null;
+    }
+    autoShift();
+  }
+
+  function pop(keyEl, label) {
+    popHide();
+    popEl = document.createElement('div');
+    popEl.className = 'kbd-pop';
+    popEl.textContent = label;
+    kbdEl.appendChild(popEl);
+    const r = keyEl.getBoundingClientRect();
+    popEl.style.left = (r.left + r.width / 2 - 22) + 'px';
+    popEl.style.top  = (r.top - 60) + 'px';
+  }
+  function popHide() { if (popEl) { popEl.remove(); popEl = null; } }
+
+  /* No dead pixels: fast thumbs land in the 2px row gaps, the ASDF-row
+     indents and the board's edge padding constantly — a real keyboard
+     resolves every touch to the nearest key, so we do too. 24px slop
+     cap: anything farther from every key is a genuine non-tap. */
+  function nearestKey(x, y) {
+    const layer = kbdSym.style.display === 'none' ? kbdLtr : kbdSym;
+    let best = null, bd = 24 * 24;
+    layer.querySelectorAll('.kbd-key').forEach(el => {
+      const r = el.getBoundingClientRect();
+      const dx = Math.max(r.left - x, 0, x - r.right);
+      const dy = Math.max(r.top - y, 0, y - r.bottom);
+      const d = dx * dx + dy * dy;
+      if (d < bd) { bd = d; best = el; }
+    });
+    return best;
+  }
+
+  /* Touch-offset correction: the thumb occludes the key and its contact
+     centroid lands LOWER than the aim point, so shift the registered
+     touch a few px higher. Keep it SMALL — the OS applies its own
+     perceived-point correction first. Per-device dial, same pattern as
+     ?immersive: ?kbdbias=N (0–15, px) sticks on the device; default 2. */
+  const TOUCH_BIAS = (() => {
+    const q = new URLSearchParams(location.search).get('kbdbias');
+    if (q !== null && q !== '') localStorage.setItem('phoneOS_kbdBias', q);
+    const v = parseFloat(localStorage.getItem('phoneOS_kbdBias'));
+    return isNaN(v) ? 2 : Math.max(0, Math.min(15, v));
+  })();
+
+  ctx.listen(kbdEl, 'pointerdown', e => {
+    e.preventDefault();               // keep focus + caret in the field
+    // toolbar dressing is exact-target; every real key resolves by
+    // BIASED geometry first, raw target only as a last resort
+    const keyEl = e.target.closest('.kbd-toolbar [data-k]')
+               || nearestKey(e.clientX, e.clientY - TOUCH_BIAS)
+               || e.target.closest('[data-k]');
+    if (!keyEl) return;
+    keyEl.classList.add('press');
+    pressMap.set(e.pointerId, keyEl);
+    const k = keyEl.dataset.k;
+    if (k === 'shift') {
+      const now = Date.now();
+      setShift(shift === 2 ? 0 : (now - lastShiftTap < 300 ? 2 : (shift ? 0 : 1)));
+      lastShiftTap = now;
+    } else if (k === 'bksp') {
+      bksp();
+      bkspPointer = e.pointerId;
+      bkspHold = sceneTimeout(() => { bkspRep = sceneInterval(bksp, 50); }, 380);
+    } else if (k === 'sym') { kbdLtr.style.display = 'none'; kbdSym.style.display = ''; }
+    else if (k === 'abc')  { kbdSym.style.display = 'none'; kbdLtr.style.display = ''; }
+    else if (k === 'ret')  { key('\n'); }   // '\n' = the field decides (send / newline)
+    else if (k === 'space'){
+      key(' ');
+      // Gboard behavior: a space after symbols means the symbol run is
+      // over — snap back to the letter layer
+      if (kbdSym.style.display !== 'none') {
+        kbdSym.style.display = 'none'; kbdLtr.style.display = '';
+      }
+    }
+    else if (k !== 'noop') {
+      const ch = (keyEl.classList.contains('ltr') && shift > 0) ? k.toUpperCase() : k;
+      pop(keyEl, ch);
+      key(ch);
+    }
+  });
+  function release(e) {
+    // per-pointer: only THIS finger's key un-presses; the other thumb's
+    // highlight and the backspace repeat survive an unrelated lift
+    const keyEl = pressMap.get(e.pointerId);
+    if (keyEl) { keyEl.classList.remove('press'); pressMap.delete(e.pointerId); }
+    // capture-compare: an older key's hide timer must not kill a newer
+    // key's pop during fast typing
+    const p = popEl;
+    sceneTimeout(() => { if (popEl === p) popHide(); }, 60);
+    if (e.pointerId === bkspPointer) {
+      if (bkspHold) { clearTimeout(bkspHold); bkspHold = null; }
+      if (bkspRep)  { clearInterval(bkspRep);  bkspRep  = null; }
+      bkspPointer = null;
+    }
+  }
+  ctx.listen(window, 'pointerup', release);
+  ctx.listen(window, 'pointercancel', release);
+
+  return kbd;
+}
+
+/* Wires a drawn-keyboard field with the scripted-reveal / free-typing /
+   auto-type behavior shared by the messages compose field and the email
+   compose Subject/Body fields. Talks only through the field + the shared
+   kbd controller, so it works on any field the board can bind to. opts:
+     script          text the field reveals as it is "typed" (null → the
+                     operator free-types whatever they like)
+     deleteDraft     type-then-erase performance (with draftMessage)
+     draftMessage    the draft that gets typed then deleted
+     grows           true → the field auto-resizes to its content
+     submitOnNewline true → a '\n' fires onSubmit and is stripped; false →
+                     the newline stays in the value (a multi-line body)
+     onSubmit()      the field was "sent" (Return / desktop Enter)
+     onReady(bool)   the field's content-present state changed
+     showOpts        {onShow} passed to kbd.bind when auto-type raises the
+                     board itself (keeps the caller's scroll fixups)
+   Auto-type performances are launched here when the Settings toggle is on. */
+function bindScriptedField(ctx, kbd, field, opts) {
+  opts = opts || {};
+  // reset element STATE from any previous scene (listeners are the
+  // lifecycle's job; state is ours)
+  field.value = '';
+  field.style.height = '';
+  field.removeAttribute('disabled');
+
+  const autoType = _settings.autoType === 'on';
+  // OFF + deleteDraft: the actor reveals then erases the draft by hand
+  const script = opts.script
+    || (!autoType && opts.deleteDraft ? opts.draftMessage : null)
+    || null;
+  const charsPerKey = script ? Math.max(1, Math.ceil(script.length / 40)) : 1;
+  let pos = 0;
+  let animTimer = null;
+
+  function autoResize() {
+    if (!opts.grows) return;
+    field.style.height = 'auto';
+    field.style.height = field.scrollHeight + 'px';
+  }
+  function ready(r) { if (opts.onReady) opts.onReady(r); }
+
+  function revealTo(target) {
+    if (animTimer) { clearInterval(animTimer); animTimer = null; }
+    let step = field.value.length;
+    if (step >= target) { field.value = script.slice(0, target); autoResize(); return; }
+    animTimer = sceneInterval(() => {
+      step++;
+      field.value = script.slice(0, step);
+      autoResize();
+      if (step >= target) { clearInterval(animTimer); animTimer = null; }
+    }, 20);
+  }
+
+  ctx.listen(field, 'input', () => {
+    const op = kbd.op;   // 'add' | 'del' from the drawn board, null from a physical keyboard
+    if (field.value.includes('\n')) {
+      if (opts.submitOnNewline) {
+        // Mobile soft-keyboard Enter injects \n into value instead of keydown
+        field.value = field.value.replace(/\n/g, '');
+        autoResize();
+        if (opts.onSubmit) opts.onSubmit();
+        return;
+      }
+      // multi-line field: the newline stays; fall through to the logic below
+    }
+
+    if (!script) {
+      // Free typing: the box grows with the text and readiness tracks content
+      autoResize();
+      ready(field.value.trim().length > 0);
+      return;
+    }
+
+    if (op === 'del' || (!op && field.value.length <= pos)) {
+      // backspace — cancel animation and peel back
+      if (animTimer) { clearInterval(animTimer); animTimer = null; }
+      pos = field.value.length;
+      field.value = script.slice(0, pos);
+      autoResize();
+      ready(pos > 0);
+      return;
+    }
+    if (op === 'add' && charsPerKey > 1) {
+      // Animated reveal: strip the raw tapped char immediately so a wrong
+      // letter never flashes at the end mid-animation — the animation just
+      // gets a farther target below
+      field.value = script.slice(0, Math.max(0, field.value.length - 1));
+    }
+    pos = Math.min(pos + charsPerKey, script.length);
+    ready(pos > 0);
+    if (charsPerKey > 1) revealTo(pos);
+    else { field.value = script.slice(0, pos); autoResize(); }
+  });
+
+  // desktop physical Enter (submit fields only; a multi-line body keeps \n)
+  if (opts.submitOnNewline) {
+    ctx.listen(field, 'keydown', e => {
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); if (opts.onSubmit) opts.onSubmit(); }
+    });
+  }
+
+  /* Auto-type ON: the phone performs the scripted typing itself. Returned
+     so callers with several fields can SEQUENCE them (compose types the
+     Subject, then on completion the Body) rather than firing at once. A
+     no-op — calling onDone straight away — when auto-type is off or the
+     field has nothing scripted, so chaining stays safe either way. */
+  function play(onDone) {
+    if (autoType && opts.deleteDraft && opts.draftMessage) {
+      // type → hesitate → erase, input locked throughout — board up, as a
+      // real phone would look while being typed on
+      field.setAttribute('disabled', 'true');
+      kbd.bind(field, opts.showOpts);
+      kbd.show();
+      runDeleteDraft(field, opts.draftMessage, () => {
+        field.removeAttribute('disabled');
+        if (onDone) onDone();
+      });
+    } else if (autoType && opts.script) {
+      // type the text, then hand control back — send stays a manual tap
+      field.setAttribute('disabled', 'true');
+      kbd.bind(field, opts.showOpts);
+      kbd.show();
+      autoTypeInto(field, opts.script, () => {
+        field.removeAttribute('disabled');
+        pos = opts.script.length;   // reveal state = fully typed
+        ready(true);
+        if (onDone) onDone();
+      });
+    } else if (onDone) {
+      onDone();
+    }
+  }
+
+  // Single-field callers (messages) self-start; multi-field callers pass
+  // autoStart:false and drive play() in the order they want.
+  if (opts.autoStart !== false) play();
+  return { play };
+}
+
 function buildTextScreen(cfg, ctx) {
   const contact = cfg.contacts && cfg.sceneContact
     ? cfg.contacts[cfg.sceneContact]
@@ -5864,288 +6437,39 @@ function buildTextScreen(cfg, ctx) {
   }
 
   ctx.listen(sendBtn, 'click', doSend);
-  // Desktop Enter key
-  ctx.listen(inputEl, 'keydown', e => {
-    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); doSend(); }
-  });
-
-  function autoResize(el) {
-    el.style.height = 'auto';
-    el.style.height = el.scrollHeight + 'px';
-  }
 
   /* ── In-app keyboard ─────────────────────────────────────────
-     The compose field is inputmode="none": the system IME never
-     engages, this drawn board is the only keyboard on every prop
-     phone. It speaks to the module through the SAME channel the
-     real keyboard did — mutate inputEl.value, dispatch 'input' —
-     so the scripted-reveal / draft / free-typing logic above needs
-     no changes and cannot tell the difference. */
-  const kbdEl = document.getElementById('kbd');
-  buildKbdDom(kbdEl);
-  const kbdLtr = kbdEl.querySelector('.ltr-layer');
-  const kbdSym = kbdEl.querySelector('.sym-layer');
-  // per-scene state reset (DOM persists across scenes)
-  kbdLtr.style.display = ''; kbdSym.style.display = 'none';
-  let kbdShift = 0;            // 0 off · 1 next-char · 2 caps-lock
-  let lastShiftTap = 0;
-  let bkspHold = null, bkspRep = null, bkspPointer = null, popEl = null;
-  const pressMap = new Map();  // pointerId → key element: two-thumb typing
-                               // means a second finger lands before the
-                               // first lifts, so release must be per-pointer
-
-  function kbdShow() {
-    if (kbdEl.classList.contains('open')) return;
-    kbdEl.classList.add('open');
-    document.documentElement.classList.add('kbd-open');
-    // lift the screen — the same --kb contract the system keyboard used
-    document.documentElement.style.setProperty('--kb', kbdEl.offsetHeight + 'px');
-    // paint the root canvas to the board colour so the strip the screen
-    // vacates never flashes black behind the 140ms slide-in
-    document.documentElement.style.background = getComputedStyle(kbdEl).backgroundColor;
+     inputmode="none": the system IME never engages; the shared
+     drawn board (initKeyboard) is the only typing surface on every
+     prop phone. It speaks to the field the way a hardware keyboard
+     would — mutate value, dispatch 'input' — so scripted reveal,
+     drafts and free typing all behave identically. */
+  const kbd = initKeyboard(ctx);
+  // messages-specific show fixups: keep the thread pinned to the newest
+  // bubble and cancel any scroll-reveal inside the overflow:hidden wrap
+  const showOpts = { onShow: () => {
     thread.scrollTop = thread.scrollHeight;
-    /* flatten iOS focus-side-effects: the page pan (offsets hit targets)
-       and any scroll-reveal inside the overflow:hidden input wrap (paints
-       the text a line away from the caret) */
-    window.scrollTo(0, 0);
-    inputEl.scrollTop = 0;
     inputEl.closest('.text-input-wrap').scrollTop = 0;
-    kbdAutoShift();
-  }
-  function kbdHide() {
-    if (!kbdEl.classList.contains('open')) return;
-    kbdEl.classList.remove('open');
-    document.documentElement.classList.remove('kbd-open');
-    document.documentElement.style.removeProperty('--kb');
-    document.documentElement.style.background = '';
-    inputEl.blur();
-  }
-
-  function kbdSetShift(n) {
-    kbdShift = n;
-    kbdLtr.classList.toggle('caps', n > 0);
-    kbdEl.querySelector('.kbd-key.shift').classList.toggle('lock', n === 2);
-  }
-  // Gboard autocapitalize: shift arms on an empty field or after
-  // sentence-ending punctuation + space; caps-lock is never overridden
-  function kbdAutoShift() {
-    if (kbdShift === 2) return;
-    kbdSetShift(inputEl.value === '' || /[.!?]\s$/.test(inputEl.value) ? 1 : 0);
-  }
-
-  function kbdKey(ch) {
-    if (inputEl.disabled) return;
-    inputEl.value += ch;
-    kbdOp = 'add';   // tell the input handler what this was (see kbdOp decl)
-    inputEl.dispatchEvent(new Event('input', { bubbles: true }));
-    kbdOp = null;
-    kbdAutoShift();
-  }
-  function kbdBksp() {
-    if (inputEl.disabled) return;
-    if (inputEl.value.length) {
-      inputEl.value = inputEl.value.slice(0, -1);
-      kbdOp = 'del';
-      inputEl.dispatchEvent(new Event('input', { bubbles: true }));
-      kbdOp = null;
-    }
-    kbdAutoShift();
-  }
-
-  function kbdPop(keyEl, label) {
-    kbdPopHide();
-    popEl = document.createElement('div');
-    popEl.className = 'kbd-pop';
-    popEl.textContent = label;
-    kbdEl.appendChild(popEl);
-    const r = keyEl.getBoundingClientRect();
-    popEl.style.left = (r.left + r.width / 2 - 22) + 'px';
-    popEl.style.top  = (r.top - 60) + 'px';
-  }
-  function kbdPopHide() { if (popEl) { popEl.remove(); popEl = null; } }
-
-  /* No dead pixels: fast thumbs land in the 2px row gaps, the ASDF-row
-     indents and the board's edge padding constantly — a real keyboard
-     resolves every touch to the nearest key, so we do too. 24px slop
-     cap: anything farther from every key is a genuine non-tap (e.g. a
-     toolbar gap), not a sloppy keypress. */
-  function kbdNearestKey(x, y) {
-    const layer = kbdSym.style.display === 'none' ? kbdLtr : kbdSym;
-    let best = null, bd = 24 * 24;
-    layer.querySelectorAll('.kbd-key').forEach(el => {
-      const r = el.getBoundingClientRect();
-      const dx = Math.max(r.left - x, 0, x - r.right);
-      const dy = Math.max(r.top - y, 0, y - r.bottom);
-      const d = dx * dx + dy * dy;
-      if (d < bd) { bd = d; best = el; }
-    });
-    return best;
-  }
-
-  /* Touch-offset correction: typing by feel, the thumb occludes the key
-     and its contact centroid lands LOWER than the aim point, so the
-     registered touch is shifted a few px higher. Careful: the OS
-     already applies its own perceived-point correction before reporting
-     coordinates (iOS notably), so this must stay SMALL — 7px stacked on
-     top of the OS's own bias made keystrokes land one key ABOVE.
-     Per-device dial, same pattern as ?immersive: visit once with
-     ?kbdbias=N (0–15, px) and the device remembers; default 2. */
-  const KBD_TOUCH_BIAS = (() => {
-    const q = new URLSearchParams(location.search).get('kbdbias');
-    if (q !== null && q !== '') localStorage.setItem('phoneOS_kbdBias', q);
-    const v = parseFloat(localStorage.getItem('phoneOS_kbdBias'));
-    return isNaN(v) ? 2 : Math.max(0, Math.min(15, v));
-  })();
-
-  ctx.listen(kbdEl, 'pointerdown', e => {
-    e.preventDefault();               // keep focus + caret in the field
-    // toolbar dressing is exact-target; every real key resolves by
-    // BIASED geometry first, raw target only as a last resort
-    const keyEl = e.target.closest('.kbd-toolbar [data-k]')
-               || kbdNearestKey(e.clientX, e.clientY - KBD_TOUCH_BIAS)
-               || e.target.closest('[data-k]');
-    if (!keyEl) return;
-    keyEl.classList.add('press');
-    pressMap.set(e.pointerId, keyEl);
-    const k = keyEl.dataset.k;
-    if (k === 'shift') {
-      const now = Date.now();
-      kbdSetShift(kbdShift === 2 ? 0 : (now - lastShiftTap < 300 ? 2 : (kbdShift ? 0 : 1)));
-      lastShiftTap = now;
-    } else if (k === 'bksp') {
-      kbdBksp();
-      bkspPointer = e.pointerId;
-      bkspHold = sceneTimeout(() => { bkspRep = sceneInterval(kbdBksp, 50); }, 380);
-    } else if (k === 'sym') { kbdLtr.style.display = 'none'; kbdSym.style.display = ''; }
-    else if (k === 'abc')  { kbdSym.style.display = 'none'; kbdLtr.style.display = ''; }
-    else if (k === 'ret')  { kbdKey('\n'); }   // '\n' = send, matching the IME path
-    else if (k === 'space'){
-      kbdKey(' ');
-      // Gboard behavior: a space after symbols means the symbol run is
-      // over — snap back to the letter layer
-      if (kbdSym.style.display !== 'none') {
-        kbdSym.style.display = 'none'; kbdLtr.style.display = '';
-      }
-    }
-    else if (k !== 'noop') {
-      const ch = (keyEl.classList.contains('ltr') && kbdShift > 0) ? k.toUpperCase() : k;
-      kbdPop(keyEl, ch);
-      kbdKey(ch);
-    }
-  });
-  function kbdRelease(e) {
-    // per-pointer: only THIS finger's key un-presses; the other thumb's
-    // highlight and the backspace repeat survive an unrelated lift
-    const keyEl = pressMap.get(e.pointerId);
-    if (keyEl) { keyEl.classList.remove('press'); pressMap.delete(e.pointerId); }
-    // capture-compare: an older key's hide timer must not kill a newer
-    // key's pop during fast typing
-    const p = popEl;
-    sceneTimeout(() => { if (popEl === p) kbdPopHide(); }, 60);
-    if (e.pointerId === bkspPointer) {
-      if (bkspHold) { clearTimeout(bkspHold); bkspHold = null; }
-      if (bkspRep)  { clearInterval(bkspRep);  bkspRep  = null; }
-      bkspPointer = null;
-    }
-  }
-  ctx.listen(window, 'pointerup', kbdRelease);
-  ctx.listen(window, 'pointercancel', kbdRelease);
-
+  } };
+  kbd.bind(inputEl, showOpts);
   // field raises the board; tapping into the thread dismisses it
-  ctx.listen(inputEl, 'focus', kbdShow);
-  ctx.listen(thread, 'pointerdown', kbdHide);
+  ctx.listen(inputEl, 'focus', kbd.show);
+  ctx.listen(thread, 'pointerdown', kbd.hide);
 
-  // Auto-type toggle (Settings, off by default). OFF: every scripted
-  // scene is actor-driven — including drafts, where keystrokes reveal
-  // the draft and backspace erases it. ON: the phone performs alone
-  // (insert-shot mode) — see the block at the end of this function.
-  const autoType = _settings.autoType === 'on';
-  const sceneMsg = cfg.sceneMessage
-    || (!autoType && cfg.deleteDraft ? cfg.draftMessage : null)
-    || null;
-  const charsPerKey  = sceneMsg ? Math.max(1, Math.ceil(sceneMsg.length / 40)) : 1;
-  let pos = 0;
-  let animTimer = null;
-  /* Set by the drawn keyboard around its dispatch ('add' | 'del') so the
-     handler below KNOWS the operation instead of inferring it from value
-     length. The inference breaks under fast typing: with charsPerKey > 1
-     the reveal is animated, value lags pos, and the next quick tap reads
-     as a backspace — the message visibly peels backwards. A physical
-     keyboard leaves this null and keeps the length heuristic. */
-  let kbdOp = null;
-
-  function revealTo(target) {
-    if (animTimer) { clearInterval(animTimer); animTimer = null; }
-    let step = inputEl.value.length;
-    if (step >= target) { inputEl.value = sceneMsg.slice(0, target); autoResize(inputEl); return; }
-    animTimer = sceneInterval(() => {
-      step++;
-      inputEl.value = sceneMsg.slice(0, step);
-      autoResize(inputEl);
-      if (step >= target) { clearInterval(animTimer); animTimer = null; }
-    }, 20);
-  }
-
-  ctx.listen(inputEl, 'input', () => {
-    const op = kbdOp;   // 'add' | 'del' from the drawn board, null from a physical keyboard
-    // Mobile soft-keyboard Enter injects \n into value instead of firing keydown
-    if (inputEl.value.includes('\n')) {
-      inputEl.value = inputEl.value.replace(/\n/g, '');
-      autoResize(inputEl);
-      doSend();
-      return;
-    }
-
-    if (!sceneMsg) {
-      // Free typing (no scripted message): same feel as scripted scenes —
-      // the box grows with the text and the send button lights up
-      autoResize(inputEl);
-      setSendReady(inputEl.value.trim().length > 0);
-      return;
-    }
-
-    if (op === 'del' || (!op && inputEl.value.length <= pos)) {
-      // backspace — cancel animation and peel back
-      if (animTimer) { clearInterval(animTimer); animTimer = null; }
-      pos = inputEl.value.length;
-      inputEl.value = sceneMsg.slice(0, pos);
-      autoResize(inputEl);
-      setSendReady(pos > 0);
-      return;
-    }
-    if (op === 'add' && charsPerKey > 1) {
-      // Animated reveal: strip the raw tapped char immediately so a wrong
-      // letter never flashes at the end mid-animation — the animation just
-      // gets a farther target below
-      inputEl.value = sceneMsg.slice(0, Math.max(0, inputEl.value.length - 1));
-    }
-    pos = Math.min(pos + charsPerKey, sceneMsg.length);
-    setSendReady(pos > 0);
-    if (charsPerKey > 1) {
-      revealTo(pos);
-    } else {
-      inputEl.value = sceneMsg.slice(0, pos);
-      autoResize(inputEl);
-    }
+  // Scripted reveal / free-typing / auto-type (shared with email compose).
+  // Auto-type toggle lives in Settings, off by default: OFF every scripted
+  // scene is actor-driven (keystrokes reveal the text, backspace erases a
+  // draft); ON the phone performs alone (insert-shot mode).
+  bindScriptedField(ctx, kbd, inputEl, {
+    script: cfg.sceneMessage,
+    deleteDraft: cfg.deleteDraft,
+    draftMessage: cfg.draftMessage,
+    grows: true,
+    submitOnNewline: true,
+    onSubmit: doSend,
+    onReady: setSendReady,
+    showOpts,
   });
-
-  // Auto-type ON: the phone performs the scripted typing itself
-  if (autoType && cfg.deleteDraft && cfg.draftMessage) {
-    // type → hesitate → erase, input locked throughout — board up, as a
-    // real phone would look while being typed on
-    inputEl.setAttribute('disabled', 'true');
-    kbdShow();
-    runDeleteDraft(inputEl, cfg.draftMessage, () => inputEl.removeAttribute('disabled'));
-  } else if (autoType && cfg.sceneMessage) {
-    // type the message, then hand control back — send stays a manual tap
-    inputEl.setAttribute('disabled', 'true');
-    kbdShow();
-    autoTypeInto(inputEl, cfg.sceneMessage, () => {
-      inputEl.removeAttribute('disabled');
-      pos = cfg.sceneMessage.length;   // reveal state = fully typed
-      setSendReady(true);
-    });
-  }
 }
 
 /* Auto-types a message with human-ish cadence, resizing the box as it
@@ -6286,10 +6610,7 @@ MODULES.messages = {
     document.getElementById('text-thread').innerHTML = '';
     // keyboard: the lift, root class and canvas paint are chrome-level
     // state the ctx can't strike (its DOM persists; state resets on build)
-    document.getElementById('kbd').classList.remove('open');
-    document.documentElement.classList.remove('kbd-open');
-    document.documentElement.style.removeProperty('--kb');
-    document.documentElement.style.background = '';
+    closeKeyboardChrome();
   }
 };
 

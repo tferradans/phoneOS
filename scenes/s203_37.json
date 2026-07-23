@@ -1,0 +1,17 @@
+{
+  "sceneId": "s203_37",
+  "sceneLabel": "203 Sc37 — Botanist composes hints email (To: Tyson Bernard + NPS HQ)",
+  "charId": "botanist",
+  "clockTime": "11:14 AM",
+  "battery": 4,
+  "signal": 3,
+  "wifi": 3,
+  "airplaneMode": false,
+  "startLocked": false,
+  "notifications": [],
+  "sceneType": "emailcompose",
+  "emailApp": "Inbox",
+  "composeTo": ["Tyson Bernard", "NPS HQ", "+6 others"],
+  "composeSubject": "hints",
+  "composeBody": "You will look where water cuts stone, that is where things surface.\nYou will mark the map in blue and call it progress.\nBut gardens do not follow rivers.\nI work where roots drink slowly, where footsteps disappear, where it is buried is safest from the sun.\nYou can restore balance or wait for a Spider Lily to bloom.\n\n* Botanist."
+}

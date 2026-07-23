@@ -1,0 +1,12 @@
+{
+  "charId": "botanist",
+  "charName": "Botanist",
+  "clockFormat": "12h",
+  "accentColor": "#0a84ff",
+  "wallpaperHome": null,
+  "wallpaperLock": null,
+  "lockType": "none",
+  "lockPin": null,
+  "biometricStyle": null,
+  "contacts": {}
+}
