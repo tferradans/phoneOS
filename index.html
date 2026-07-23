@@ -1393,6 +1393,9 @@
     transform: translateY(105%);
     transition: transform 0.14s ease-out;
     pointer-events: none;
+    /* fast typing = rapid double-taps; never let the browser read them
+       as a zoom gesture (html's touch-action does not inherit) */
+    touch-action: manipulation;
   }
   .kbd.open { transform: none; pointer-events: auto; }
 
@@ -5883,7 +5886,10 @@ function buildTextScreen(cfg, ctx) {
   kbdLtr.style.display = ''; kbdSym.style.display = 'none';
   let kbdShift = 0;            // 0 off · 1 next-char · 2 caps-lock
   let lastShiftTap = 0;
-  let bkspHold = null, bkspRep = null, popEl = null;
+  let bkspHold = null, bkspRep = null, bkspPointer = null, popEl = null;
+  const pressMap = new Map();  // pointerId → key element: two-thumb typing
+                               // means a second finger lands before the
+                               // first lifts, so release must be per-pointer
 
   function kbdShow() {
     if (kbdEl.classList.contains('open')) return;
@@ -5895,6 +5901,12 @@ function buildTextScreen(cfg, ctx) {
     // vacates never flashes black behind the 140ms slide-in
     document.documentElement.style.background = getComputedStyle(kbdEl).backgroundColor;
     thread.scrollTop = thread.scrollHeight;
+    /* flatten iOS focus-side-effects: the page pan (offsets hit targets)
+       and any scroll-reveal inside the overflow:hidden input wrap (paints
+       the text a line away from the caret) */
+    window.scrollTo(0, 0);
+    inputEl.scrollTop = 0;
+    inputEl.closest('.text-input-wrap').scrollTop = 0;
     kbdAutoShift();
   }
   function kbdHide() {
@@ -5921,14 +5933,18 @@ function buildTextScreen(cfg, ctx) {
   function kbdKey(ch) {
     if (inputEl.disabled) return;
     inputEl.value += ch;
+    kbdOp = 'add';   // tell the input handler what this was (see kbdOp decl)
     inputEl.dispatchEvent(new Event('input', { bubbles: true }));
+    kbdOp = null;
     kbdAutoShift();
   }
   function kbdBksp() {
     if (inputEl.disabled) return;
     if (inputEl.value.length) {
       inputEl.value = inputEl.value.slice(0, -1);
+      kbdOp = 'del';
       inputEl.dispatchEvent(new Event('input', { bubbles: true }));
+      kbdOp = null;
     }
     kbdAutoShift();
   }
@@ -5950,6 +5966,7 @@ function buildTextScreen(cfg, ctx) {
     const keyEl = e.target.closest('[data-k]');
     if (!keyEl) return;
     keyEl.classList.add('press');
+    pressMap.set(e.pointerId, keyEl);
     const k = keyEl.dataset.k;
     if (k === 'shift') {
       const now = Date.now();
@@ -5957,6 +5974,7 @@ function buildTextScreen(cfg, ctx) {
       lastShiftTap = now;
     } else if (k === 'bksp') {
       kbdBksp();
+      bkspPointer = e.pointerId;
       bkspHold = sceneTimeout(() => { bkspRep = sceneInterval(kbdBksp, 50); }, 380);
     } else if (k === 'sym') { kbdLtr.style.display = 'none'; kbdSym.style.display = ''; }
     else if (k === 'abc')  { kbdSym.style.display = 'none'; kbdLtr.style.display = ''; }
@@ -5968,12 +5986,23 @@ function buildTextScreen(cfg, ctx) {
       kbdKey(ch);
     }
   });
-  ctx.listen(window, 'pointerup', () => {
-    kbdEl.querySelectorAll('.press').forEach(el => el.classList.remove('press'));
-    sceneTimeout(kbdPopHide, 60);
-    if (bkspHold) { clearTimeout(bkspHold); bkspHold = null; }
-    if (bkspRep)  { clearInterval(bkspRep);  bkspRep  = null; }
-  });
+  function kbdRelease(e) {
+    // per-pointer: only THIS finger's key un-presses; the other thumb's
+    // highlight and the backspace repeat survive an unrelated lift
+    const keyEl = pressMap.get(e.pointerId);
+    if (keyEl) { keyEl.classList.remove('press'); pressMap.delete(e.pointerId); }
+    // capture-compare: an older key's hide timer must not kill a newer
+    // key's pop during fast typing
+    const p = popEl;
+    sceneTimeout(() => { if (popEl === p) kbdPopHide(); }, 60);
+    if (e.pointerId === bkspPointer) {
+      if (bkspHold) { clearTimeout(bkspHold); bkspHold = null; }
+      if (bkspRep)  { clearInterval(bkspRep);  bkspRep  = null; }
+      bkspPointer = null;
+    }
+  }
+  ctx.listen(window, 'pointerup', kbdRelease);
+  ctx.listen(window, 'pointercancel', kbdRelease);
 
   // field raises the board; tapping into the thread dismisses it
   ctx.listen(inputEl, 'focus', kbdShow);
@@ -5990,6 +6019,13 @@ function buildTextScreen(cfg, ctx) {
   const charsPerKey  = sceneMsg ? Math.max(1, Math.ceil(sceneMsg.length / 40)) : 1;
   let pos = 0;
   let animTimer = null;
+  /* Set by the drawn keyboard around its dispatch ('add' | 'del') so the
+     handler below KNOWS the operation instead of inferring it from value
+     length. The inference breaks under fast typing: with charsPerKey > 1
+     the reveal is animated, value lags pos, and the next quick tap reads
+     as a backspace — the message visibly peels backwards. A physical
+     keyboard leaves this null and keeps the length heuristic. */
+  let kbdOp = null;
 
   function revealTo(target) {
     if (animTimer) { clearInterval(animTimer); animTimer = null; }
@@ -6004,6 +6040,7 @@ function buildTextScreen(cfg, ctx) {
   }
 
   ctx.listen(inputEl, 'input', () => {
+    const op = kbdOp;   // 'add' | 'del' from the drawn board, null from a physical keyboard
     // Mobile soft-keyboard Enter injects \n into value instead of firing keydown
     if (inputEl.value.includes('\n')) {
       inputEl.value = inputEl.value.replace(/\n/g, '');
@@ -6020,7 +6057,7 @@ function buildTextScreen(cfg, ctx) {
       return;
     }
 
-    if (inputEl.value.length <= pos) {
+    if (op === 'del' || (!op && inputEl.value.length <= pos)) {
       // backspace — cancel animation and peel back
       if (animTimer) { clearInterval(animTimer); animTimer = null; }
       pos = inputEl.value.length;
@@ -6028,6 +6065,12 @@ function buildTextScreen(cfg, ctx) {
       autoResize(inputEl);
       setSendReady(pos > 0);
       return;
+    }
+    if (op === 'add' && charsPerKey > 1) {
+      // Animated reveal: strip the raw tapped char immediately so a wrong
+      // letter never flashes at the end mid-animation — the animation just
+      // gets a farther target below
+      inputEl.value = sceneMsg.slice(0, Math.max(0, inputEl.value.length - 1));
     }
     pos = Math.min(pos + charsPerKey, sceneMsg.length);
     setSendReady(pos > 0);
@@ -6445,12 +6488,14 @@ function openQuickSettings() {
 }
 
 // Triple-tap the RIGHT edge strip (48px) while a scene is active.
-// Taps on real controls (buttons, zoom chips) never count.
+// Taps on real controls (buttons, zoom chips) never count. Neither does
+// the drawn keyboard — backspace sits inside the strip, and three fast
+// backspaces must not summon the settings panel mid-take.
 const QS_TAP_MS = 500, QS_STRIP_PX = 48;
 let _qsTaps = 0, _qsLast = 0;
 document.getElementById('phone-chrome').addEventListener('click', e => {
   if (!phoneIsActive()) return;
-  if (e.target.closest('button, input, .trk-zoom')) { _qsTaps = 0; return; }
+  if (e.target.closest('button, input, .trk-zoom, #kbd')) { _qsTaps = 0; return; }
   const r = document.getElementById('phone-chrome').getBoundingClientRect();
   if (r.right - e.clientX > QS_STRIP_PX) { _qsTaps = 0; return; }
   const now = Date.now();
@@ -6675,8 +6720,14 @@ if (window.visualViewport) {
     kbRaf = null;
     /* the drawn in-app keyboard owns --kb while open — the system IME
        can't appear over it (inputmode=none), so any resize landing here
-       is rotation/chrome noise that must not stomp the board's lift */
-    if (document.documentElement.classList.contains('kbd-open')) return;
+       is rotation/chrome noise that must not stomp the board's lift.
+       The pan-undo must STILL run: iOS pans/scroll-reveals on field
+       focus even with no IME, and a stuck pan offsets every hit target
+       — taps land on the wrong keys, the caret drifts from the text. */
+    if (document.documentElement.classList.contains('kbd-open')) {
+      if (window.scrollY || vv.offsetTop) window.scrollTo(0, 0);
+      return;
+    }
     const kb = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
     document.documentElement.style.setProperty('--kb', kb + 'px');
     if (window.scrollY || vv.offsetTop) window.scrollTo(0, 0);
